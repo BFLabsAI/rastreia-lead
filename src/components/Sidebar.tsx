@@ -1,9 +1,11 @@
-import { LayoutDashboard, Users, Zap, TrendingUp, LogOut, Hexagon, BarChart3 } from 'lucide-react';
+import { LayoutDashboard, Users, Zap, TrendingUp, LogOut, Hexagon, BarChart3, UserPlus, Settings } from 'lucide-react';
 import { clsx } from 'clsx';
+import { NavLink } from 'react-router-dom';
+import { supabase } from '../lib/supabase';
 
 interface SidebarProps {
-    currentPath: string;
-    onNavigate: (path: string) => void;
+    currentPath: string; // Kept for compatibility but unused
+    // onNavigate no longer needed with NavLink
 }
 
 const NAV_ITEMS = [
@@ -14,7 +16,7 @@ const NAV_ITEMS = [
     { label: 'Google Ads', path: '/google', icon: TrendingUp },
 ];
 
-export function Sidebar({ currentPath, onNavigate }: SidebarProps) {
+export function Sidebar({ }: SidebarProps) {
     return (
         <aside className="fixed left-0 top-0 h-screen w-72 p-4 flex flex-col z-50">
             <div className="h-full bg-[#0A0A0A]/80 backdrop-blur-xl border border-white/5 rounded-2xl flex flex-col shadow-2xl">
@@ -33,33 +35,61 @@ export function Sidebar({ currentPath, onNavigate }: SidebarProps) {
                 {/* Navigation */}
                 <nav className="flex-1 px-4 space-y-2">
                     <p className="px-4 text-xs font-semibold text-gray-500 uppercase tracking-widest mb-4">Menu</p>
-                    {NAV_ITEMS.map((item) => {
-                        const isActive = currentPath === item.path;
-                        return (
-                            <button
-                                key={item.path}
-                                onClick={() => onNavigate(item.path)}
-                                className={clsx(
-                                    "w-full flex items-center gap-4 px-4 py-3.5 rounded-xl transition-all duration-300 group relative overflow-hidden",
-                                    isActive
-                                        ? "text-white shadow-lg shadow-purple-500/10"
-                                        : "text-gray-400 hover:text-white hover:bg-white/5"
-                                )}
-                            >
+                    {NAV_ITEMS.map((item) => (
+                        <NavLink
+                            key={item.path}
+                            to={item.path}
+                            className={({ isActive }) => clsx(
+                                "w-full flex items-center gap-4 px-4 py-3.5 rounded-xl transition-all duration-300 group relative overflow-hidden",
+                                isActive
+                                    ? "text-white shadow-lg shadow-purple-500/10"
+                                    : "text-gray-400 hover:text-white hover:bg-white/5"
+                            )}
+                        >
+                            {({ isActive }) => (
+                                <>
+                                    {isActive && (
+                                        <div className="absolute inset-0 bg-gradient-to-r from-indigo-600/20 to-purple-600/20 border-l-2 border-indigo-500" />
+                                    )}
+                                    <item.icon
+                                        size={20}
+                                        className={clsx(
+                                            "relative z-10 transition-colors duration-300",
+                                            isActive ? "text-indigo-400" : "text-gray-500 group-hover:text-gray-300"
+                                        )}
+                                    />
+                                    <span className="relative z-10 font-medium text-sm tracking-wide">{item.label}</span>
+                                </>
+                            )}
+                        </NavLink>
+                    ))}
+
+                    {/* Add Client Edit Link */}
+                    <NavLink
+                        to="/clients/edit"
+                        className={({ isActive }) => clsx(
+                            "w-full flex items-center gap-4 px-4 py-3.5 rounded-xl transition-all duration-300 group relative overflow-hidden mt-4",
+                            isActive
+                                ? "text-white shadow-lg shadow-purple-500/10"
+                                : "text-gray-400 hover:text-white hover:bg-white/5"
+                        )}
+                    >
+                        {({ isActive }) => (
+                            <>
                                 {isActive && (
                                     <div className="absolute inset-0 bg-gradient-to-r from-indigo-600/20 to-purple-600/20 border-l-2 border-indigo-500" />
                                 )}
-                                <item.icon
+                                <Settings
                                     size={20}
                                     className={clsx(
                                         "relative z-10 transition-colors duration-300",
                                         isActive ? "text-indigo-400" : "text-gray-500 group-hover:text-gray-300"
                                     )}
                                 />
-                                <span className="relative z-10 font-medium text-sm tracking-wide">{item.label}</span>
-                            </button>
-                        );
-                    })}
+                                <span className="relative z-10 font-medium text-sm tracking-wide">Dados do Cliente</span>
+                            </>
+                        )}
+                    </NavLink>
                 </nav>
 
                 {/* User / Logout */}
@@ -73,7 +103,23 @@ export function Sidebar({ currentPath, onNavigate }: SidebarProps) {
                             <p className="text-xs text-gray-500">Admin</p>
                         </div>
                     </div>
-                    <button className="flex items-center gap-2 text-gray-400 hover:text-red-400 text-xs font-medium transition-colors w-full px-1">
+
+                    {/* New Client Button in User Area */}
+                    <NavLink
+                        to="/clients/new"
+                        className="flex items-center gap-2 text-indigo-400 hover:text-indigo-300 text-xs font-medium transition-colors w-full px-1 mb-2"
+                    >
+                        <UserPlus size={14} />
+                        <span>Novo Cliente</span>
+                    </NavLink>
+
+                    <button
+                        onClick={async () => {
+                            await supabase.auth.signOut();
+                            window.location.reload(); // Force reload to clear state and likely redirect to login
+                        }}
+                        className="flex items-center gap-2 text-gray-400 hover:text-red-400 text-xs font-medium transition-colors w-full px-1"
+                    >
                         <LogOut size={14} />
                         <span>Sair do Sistema</span>
                     </button>

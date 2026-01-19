@@ -126,7 +126,7 @@ export function GoogleDetail() {
         fetchCampaigns();
     }, [selectedClient, dateRange]);
 
-    // Toggle Campaign Expansion & Load Keywords
+    // Toggle Campaign Expansion & Load Data
     const toggleCampaign = async (campaignId: number) => {
         const camp = campaigns.find(c => c.id === campaignId);
         if (!camp) return;
@@ -139,36 +139,32 @@ export function GoogleDetail() {
             return;
         }
 
-        // Load keywords if not already loaded
+
+
+        // Load data if not already loaded
         if (!camp.keywords || camp.keywords.length === 0) {
             setLoadingKeywords(campaignId);
             const startDateStr = format(startOfDay(dateRange.startDate), 'yyyy-MM-dd');
             const endDateStr = format(endOfDay(dateRange.endDate), 'yyyy-MM-dd');
 
             try {
-                // Get Keyword Dims for this campaign
-                const { data: dimKws, error: dimError } = await supabase
+                // 1. Fetch Keywords
+                let keywords: Keyword[] = [];
+                const { data: dimKws } = await supabase
                     .from('relatorio_google_dim_keywords')
                     .select('id, keyword_text, match_type')
                     .eq('campaign_id', campaignId);
 
-                if (dimError) throw dimError;
-
                 if (dimKws && dimKws.length > 0) {
                     const kwIds = dimKws.map(k => k.id);
-
-                    // Get ALL facts for these keywords (not just keyword-level summaries)
-                    const { data: facts, error: factsError } = await supabase
+                    const { data: kwFacts } = await supabase
                         .from('relatorio_google_fact_search_term_performance')
                         .select('keyword_id, clicks, impressions, cost, conversions')
                         .in('keyword_id', kwIds)
                         .gte('date', startDateStr)
                         .lte('date', endDateStr);
 
-                    if (factsError) throw factsError;
-
-                    // Aggregate by keyword_id
-                    const agg = (facts || []).reduce((acc: any, curr) => {
+                    const kwAgg = (kwFacts || []).reduce((acc: any, curr) => {
                         const kid = curr.keyword_id;
                         if (!acc[kid]) acc[kid] = { clicks: 0, imp: 0, cost: 0, conv: 0 };
                         acc[kid].clicks += curr.clicks || 0;
@@ -178,79 +174,66 @@ export function GoogleDetail() {
                         return acc;
                     }, {});
 
-                    const keywords: Keyword[] = dimKws.map(k => ({
+                    keywords = dimKws.map(k => ({
                         id: k.id,
                         text: k.keyword_text,
                         matchType: k.match_type,
-                        clicks: agg[k.id]?.clicks || 0,
-                        impressions: agg[k.id]?.imp || 0,
-                        cost: agg[k.id]?.cost || 0,
-                        conversions: agg[k.id]?.conv || 0,
-                        isExpanded: false,
-                        searchTerms: []
+                        clicks: kwAgg[k.id]?.clicks || 0,
+                        impressions: kwAgg[k.id]?.imp || 0,
+                        cost: kwAgg[k.id]?.cost || 0,
+                        conversions: kwAgg[k.id]?.conv || 0,
+                        isExpanded: false
                     })).filter(k => k.clicks > 0 || k.impressions > 0)
                         .sort((a, b) => b.clicks - a.clicks);
-
-                    setCampaigns(prev => prev.map(c =>
-                        c.id === campaignId ? { ...c, isExpanded: true, keywords } : c
-                    ));
-                } else {
-                    // No keywords exist - show search terms directly as "keywords"
-                    const { data: stDims } = await supabase
-                        .from('relatorio_google_dim_search_terms')
-                        .select('id, search_term_text')
-                        .eq('campaign_id', campaignId);
-
-                    if (stDims && stDims.length > 0) {
-                        const stIds = stDims.map(s => s.id);
-
-                        const { data: facts } = await supabase
-                            .from('relatorio_google_fact_search_term_performance')
-                            .select('search_term_id, clicks, impressions, cost, conversions')
-                            .in('search_term_id', stIds)
-                            .gte('date', startDateStr)
-                            .lte('date', endDateStr);
-
-                        const agg = (facts || []).reduce((acc: any, curr) => {
-                            const sid = curr.search_term_id;
-                            if (!acc[sid]) acc[sid] = { clicks: 0, imp: 0, cost: 0, conv: 0 };
-                            acc[sid].clicks += curr.clicks || 0;
-                            acc[sid].imp += curr.impressions || 0;
-                            acc[sid].cost += Number(curr.cost) || 0;
-                            acc[sid].conv += Number(curr.conversions) || 0;
-                            return acc;
-                        }, {});
-
-                        // Show search terms as "keywords" (with isExpanded false so they don't expand further)
-                        const keywords: Keyword[] = stDims.map(s => ({
-                            id: s.id,
-                            text: s.search_term_text,
-                            matchType: 'Termo de Pesquisa',
-                            clicks: agg[s.id]?.clicks || 0,
-                            impressions: agg[s.id]?.imp || 0,
-                            cost: agg[s.id]?.cost || 0,
-                            conversions: agg[s.id]?.conv || 0,
-                            isExpanded: false,
-                            searchTerms: []
-                        })).filter(k => k.clicks > 0 || k.impressions > 0)
-                            .sort((a, b) => b.clicks - a.clicks);
-
-                        setCampaigns(prev => prev.map(c =>
-                            c.id === campaignId ? { ...c, isExpanded: true, keywords } : c
-                        ));
-                    } else {
-                        setCampaigns(prev => prev.map(c =>
-                            c.id === campaignId ? { ...c, isExpanded: true, keywords: [] } : c
-                        ));
-                    }
                 }
+
+                // 2. Fetch Search Terms (Campaign Level)
+                let searchTerms: SearchTerm[] = [];
+                const { data: dimTerms } = await supabase
+                    .from('relatorio_google_dim_search_terms')
+                    .select('id, search_term_text')
+                    .eq('campaign_id', campaignId);
+
+                if (dimTerms && dimTerms.length > 0) {
+                    const termIds = dimTerms.map(t => t.id);
+                    const { data: termFacts } = await supabase
+                        .from('relatorio_google_fact_search_term_performance')
+                        .select('search_term_id, clicks, impressions, cost, conversions')
+                        .in('search_term_id', termIds)
+                        .gte('date', startDateStr)
+                        .lte('date', endDateStr);
+
+                    const termAgg = (termFacts || []).reduce((acc: any, curr) => {
+                        const tid = curr.search_term_id;
+                        if (!acc[tid]) acc[tid] = { clicks: 0, imp: 0, cost: 0, conv: 0 };
+                        acc[tid].clicks += curr.clicks || 0;
+                        acc[tid].imp += curr.impressions || 0;
+                        acc[tid].cost += Number(curr.cost) || 0;
+                        acc[tid].conv += Number(curr.conversions) || 0;
+                        return acc;
+                    }, {});
+
+                    searchTerms = dimTerms.map(t => ({
+                        id: t.id,
+                        text: t.search_term_text,
+                        clicks: termAgg[t.id]?.clicks || 0,
+                        impressions: termAgg[t.id]?.imp || 0,
+                        cost: termAgg[t.id]?.cost || 0,
+                        conversions: termAgg[t.id]?.conv || 0
+                    })).filter(t => t.clicks > 0 || t.impressions > 0)
+                        .sort((a, b) => b.clicks - a.clicks);
+                }
+
+                setCampaigns(prev => prev.map(c =>
+                    c.id === campaignId ? { ...c, isExpanded: true, keywords, searchTerms } : c
+                ));
+
             } catch (err) {
-                console.error("Error loading keywords:", err);
+                console.error("Error loading data:", err);
             } finally {
                 setLoadingKeywords(null);
             }
         } else {
-            // Just expand
             setCampaigns(prev => prev.map(c =>
                 c.id === campaignId ? { ...c, isExpanded: true } : c
             ));
@@ -501,13 +484,11 @@ export function GoogleDetail() {
                                                     <div key={kw.id}>
                                                         {/* Keyword Row */}
                                                         <div
-                                                            className={`p-3 pl-6 hover:bg-white/[0.02] transition-colors flex items-center gap-4 ${kw.matchType !== 'Termo de Pesquisa' ? 'cursor-pointer' : ''}`}
-                                                            onClick={() => kw.matchType !== 'Termo de Pesquisa' && toggleKeyword(camp.id, kw.id)}
+                                                            className={`p-3 pl-6 hover:bg-white/[0.02] transition-colors flex items-center gap-4 cursor-pointer`}
+                                                            onClick={() => toggleKeyword(camp.id, kw.id)}
                                                         >
                                                             <div className="w-5">
-                                                                {kw.matchType === 'Termo de Pesquisa' ? (
-                                                                    <div className="w-4" /> // Placeholder
-                                                                ) : loadingTerms === kw.id ? (
+                                                                {loadingTerms === kw.id ? (
                                                                     <div className="w-3 h-3 border-2 border-blue-500/30 border-t-blue-500 rounded-full animate-spin" />
                                                                 ) : kw.isExpanded ? (
                                                                     <ChevronDown className="text-blue-400" size={16} />
@@ -517,26 +498,22 @@ export function GoogleDetail() {
                                                             </div>
                                                             <div className="flex-1">
                                                                 <p className="text-gray-300 text-sm font-medium">{kw.text}</p>
-                                                                {kw.matchType && (
-                                                                    <span className="text-xs text-gray-500 bg-white/5 px-2 py-0.5 rounded mt-1 inline-block">
-                                                                        {kw.matchType}
-                                                                    </span>
-                                                                )}
+
                                                             </div>
                                                             <div className="flex gap-6">
-                                                                <div className="text-right">
-                                                                    <p className="text-xs text-gray-600">Impressões</p>
-                                                                    <p className="text-gray-400 font-mono text-sm">{kw.impressions.toLocaleString('pt-BR')}</p>
+                                                                <div className="text-right w-20">
+                                                                    <p className="text-xs text-gray-600">Imp</p>
+                                                                    <p className="text-gray-400 font-mono text-sm">{kw.impressions}</p>
                                                                 </div>
-                                                                <div className="text-right">
+                                                                <div className="text-right w-20">
                                                                     <p className="text-xs text-gray-600">Cliques</p>
                                                                     <p className="text-gray-400 font-mono text-sm">{kw.clicks}</p>
                                                                 </div>
-                                                                <div className="text-right">
+                                                                <div className="text-right w-24">
                                                                     <p className="text-xs text-gray-600">Custo</p>
                                                                     <p className="text-lime-400/80 font-mono text-sm">R$ {kw.cost.toFixed(2)}</p>
                                                                 </div>
-                                                                <div className="text-right">
+                                                                <div className="text-right w-16">
                                                                     <p className="text-xs text-gray-600">Conv</p>
                                                                     <p className="text-lime-400 font-mono text-sm">{kw.conversions}</p>
                                                                 </div>

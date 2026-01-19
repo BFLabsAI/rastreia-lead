@@ -61,6 +61,23 @@ export function Header({ onNewLead }: HeaderProps) {
                             {clients.length === 0 && !isLoading && (
                                 <div className="p-4 text-center text-gray-500 text-sm">Nenhum cliente encontrado</div>
                             )}
+
+                            {/* Create Client Option */}
+                            <button
+                                onClick={() => {
+                                    // We need to use navigate here, but Header might not have it.
+                                    // Since we are inside Router now, we can use useNavigate hook if we import it.
+                                    // Or pass a handler. Let's use window.location or passed handler?
+                                    // Better: The Header component is inside the Router context in App.
+                                    // But Header is imported in App.tsx. 
+                                    // Let's rely on adding useNavigate to Header.tsx imports.
+                                    window.location.href = '/clients/new';
+                                }}
+                                className="w-full text-left px-4 py-3 rounded-xl transition-all flex items-center gap-3 text-indigo-400 hover:text-white hover:bg-white/5 border-t border-white/5 mt-1"
+                            >
+                                <Plus size={16} />
+                                <span className="font-medium">Cadastrar Novo Cliente</span>
+                            </button>
                         </div>
                     </div>
                 )}

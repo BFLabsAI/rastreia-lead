@@ -6,7 +6,13 @@ export interface Client {
     nome: string;
     id_conta_meta?: string;
     id_conta_google?: string;
-    // Add other fields as needed
+    enviar_relatorio_meta?: boolean;
+    checar_saldo_meta?: boolean;
+    enviar_relatorio_google?: boolean;
+    status?: string; // 'Ativo' | 'Inativo'
+    tipo_pagamento?: string; // 'Cartão' | 'Boleto'
+    valor_base?: number | string; // DB is text currently, but we treat as number
+    instancia?: string;
 }
 
 interface ClientContextType {
@@ -31,7 +37,7 @@ export function ClientProvider({ children }: { children: ReactNode }) {
         setIsLoading(true);
         const { data, error } = await supabase
             .from('relatorio_clientes_bf_labs')
-            .select('id, nome, id_conta_meta, id_conta_google')
+            .select('*') // Select all to ensure we get new fields
             .order('nome');
 
         if (error) {
