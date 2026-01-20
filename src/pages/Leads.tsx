@@ -10,6 +10,9 @@ interface Lead {
     created_at: string;
     telefone_lead: string;
     origem: string;
+    source_url?: string; // New
+    conversion_source?: string; // New
+    ctwa_clid?: string; // New
 }
 
 interface OriginJSON {
@@ -95,6 +98,7 @@ export function Leads() {
                         <thead className="bg-white/[0.02]">
                             <tr>
                                 <th className="p-4 text-xs font-semibold text-gray-500 uppercase">Telefone</th>
+                                <th className="p-4 text-xs font-semibold text-gray-500 uppercase">Plataforma</th>
                                 <th className="p-4 text-xs font-semibold text-gray-500 uppercase">Origem</th>
                                 <th className="p-4 text-xs font-semibold text-gray-500 uppercase">Anúncio</th>
                                 <th className="p-4 text-xs font-semibold text-gray-500 uppercase">Data</th>
@@ -121,45 +125,76 @@ export function Leads() {
                             ) : (
                                 leads.map((lead) => {
                                     // Parse Origin Logic
+                                    // Removed let declaration to avoid conflict with outer scope logic if merged
                                     let originType = 'Orgânico';
                                     let adUrl = null;
-                                    let sourceApp = '';
+
+                                    // Use a temporary variable for the app source inside this block scope
+                                    let internalSourceApp = '';
 
                                     try {
                                         if (lead.origem) {
                                             let parsed = lead.origem;
-                                            // Handle potential double stringification
                                             if (typeof parsed === 'string') {
-                                                try {
-                                                    parsed = JSON.parse(parsed);
-                                                } catch (e) {
-                                                    // If simple string, keep as is
-                                                }
+                                                try { parsed = JSON.parse(parsed); } catch (e) { }
                                             }
-
-                                            // If it turned into a string again (nested JSON), parse again
                                             if (typeof parsed === 'string' && parsed.trim().startsWith('{')) {
-                                                try {
-                                                    parsed = JSON.parse(parsed);
-                                                } catch (e) { }
+                                                try { parsed = JSON.parse(parsed); } catch (e) { }
                                             }
 
                                             if (typeof parsed === 'object' && parsed !== null) {
+                                                const json = parsed as OriginJSON;
                                                 const isTraffic =
-                                                    parsed.conversionSource === 'FB_Ads' ||
-                                                    parsed.sourceType === 'ad' ||
-                                                    parsed.entryPointConversionSource === 'ctwa_ad';
+                                                    json.conversionSource === 'FB_Ads' ||
+                                                    json.sourceType === 'ad' ||
+                                                    json.entryPointConversionSource === 'ctwa_ad';
 
                                                 originType = isTraffic ? 'Tráfego' : 'Orgânico';
-                                                adUrl = parsed.sourceUrl || parsed.mediaUrl || null;
-                                                sourceApp = parsed.sourceApp || parsed.entryPointConversionApp || '';
+                                                adUrl = json.sourceUrl || json.mediaUrl || null;
+                                                internalSourceApp = json.sourceApp || json.entryPointConversionApp || '';
                                             } else if (typeof parsed === 'string') {
-                                                // Fallback for simple strings if any
                                                 originType = parsed;
                                             }
                                         }
                                     } catch (err) {
                                         console.error('Error parsing origin:', err);
+                                    }
+
+                                    // Platform Detection Logic
+                                    let platform = 'Orgânico';
+                                    let platformColor = 'bg-gray-500/10 text-gray-400 border-gray-500/20';
+
+                                    const lowerSourceUrl = (lead.source_url || '').toLowerCase();
+                                    const lowerConvSource = (lead.conversion_source || '').toLowerCase();
+
+                                    // Helper to check parsed JSON if columns are empty
+                                    let parsedJson: any = {};
+                                    try {
+                                        if (lead.origem && typeof lead.origem === 'string') {
+                                            parsedJson = JSON.parse(lead.origem);
+                                            if (typeof parsedJson === 'string') parsedJson = JSON.parse(parsedJson);
+                                        } else if (typeof lead.origem === 'object') {
+                                            parsedJson = lead.origem;
+                                        }
+                                    } catch (e) { }
+
+                                    // Combined checks (DB columns + JSON fallback)
+                                    const sourceUrl = lowerSourceUrl || (parsedJson.sourceUrl || '').toLowerCase();
+                                    const convSource = lowerConvSource || (parsedJson.conversionSource || '').toLowerCase();
+                                    const sourceApp = (internalSourceApp || '').toLowerCase();
+
+                                    if (sourceUrl.includes('google') || sourceUrl.includes('gclid')) {
+                                        platform = 'Google Ads';
+                                        platformColor = 'bg-blue-500/10 text-blue-400 border-blue-500/20';
+                                    } else if (sourceUrl.includes('facebook') || convSource === 'fb_ads' || sourceApp === 'facebook') {
+                                        platform = 'Facebook Ads';
+                                        platformColor = 'bg-blue-600/10 text-blue-500 border-blue-600/20';
+                                    } else if (sourceUrl.includes('instagram') || sourceApp === 'instagram') {
+                                        platform = 'Instagram Ads';
+                                        platformColor = 'bg-pink-500/10 text-pink-400 border-pink-500/20';
+                                    } else if (lead.ctwa_clid || parsedJson.ctwaClid) {
+                                        platform = 'Meta Ads (WhatsApp)';
+                                        platformColor = 'bg-green-500/10 text-green-400 border-green-500/20';
                                     }
 
                                     // Display Phone Logic
@@ -171,18 +206,18 @@ export function Leads() {
                                                 <p className="text-white font-medium font-mono">{displayPhone}</p>
                                             </td>
                                             <td className="p-4">
+                                                <span className={`px-3 py-1 rounded-full text-xs font-medium border ${platformColor}`}>
+                                                    {platform}
+                                                </span>
+                                            </td>
+                                            <td className="p-4">
                                                 <div className="flex items-center gap-2">
                                                     <span className={`px-3 py-1 rounded-full text-xs font-medium border ${originType === 'Tráfego'
-                                                        ? 'bg-blue-500/10 text-blue-400 border-blue-500/20'
-                                                        : 'bg-green-500/10 text-green-400 border-green-500/20'
+                                                        ? 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20'
+                                                        : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
                                                         }`}>
                                                         {originType}
                                                     </span>
-                                                    {sourceApp && (
-                                                        <span className="text-[10px] text-gray-500 uppercase tracking-wider">
-                                                            {sourceApp}
-                                                        </span>
-                                                    )}
                                                 </div>
                                             </td>
                                             <td className="p-4">

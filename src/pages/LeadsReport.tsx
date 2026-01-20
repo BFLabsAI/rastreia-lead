@@ -20,26 +20,76 @@ interface OriginJSON {
     entryPointConversionApp?: string;
 }
 
-const COLORS = {
-    'Tráfego': '#E1306C', // Using Instagram color for Traffic as representative
-    'Orgânico': '#10B981',
-    'Outros': '#6B7280'
-};
+
+
+
+interface Lead {
+    id: number;
+    created_at: string;
+    origem: string;
+    source_url?: string;
+    conversion_source?: string;
+    ctwa_clid?: string;
+}
 
 export function LeadsReport() {
-    // ... (existing hooks)
+    const { selectedClient } = useClient();
+    const { dateRange } = useDateRange();
+    const [leads, setLeads] = useState<Lead[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        async function fetchLeads() {
+            if (!selectedClient) return;
+
+            setLoading(true);
+            const startDateStr = format(startOfDay(dateRange.startDate), 'yyyy-MM-dd');
+            const endDateStr = format(endOfDay(dateRange.endDate), 'yyyy-MM-dd');
+
+            const { data, error } = await supabase
+                .from('relatorio_leads_cliente')
+                .select('*')
+                .eq('cliente_id', selectedClient.id)
+                .gte('created_at', startDateStr)
+                .lte('created_at', endDateStr);
+
+            if (error) {
+                console.error('Error fetching leads:', error);
+            } else {
+                setLeads(data || []);
+            }
+            setLoading(false);
+        }
+
+        fetchLeads();
+    }, [selectedClient, dateRange]);
 
     // Process Metrics
     const metrics = useMemo(() => {
+        // Platform Distribution colors
+        const PLATFORM_COLORS: Record<string, string> = {
+            'Google Ads': '#4285F4',
+            'Facebook Ads': '#1877F2',
+            'Instagram Ads': '#E1306C',
+            'Meta Ads (WhatsApp)': '#25D366',
+            'Orgânico': '#10B981',
+            'Outros': '#6B7280'
+        };
+
         const total = leads.length;
         const bySource: Record<string, number> = {};
         const timeline: Record<string, { trafego: number, organico: number, date: string }> = {};
 
+        // Top Ads Calculation
+        const adsCount: Record<string, number> = {};
+
         leads.forEach(lead => {
             let source = 'Outros';
+            let platform = 'Orgânico';
 
             // Parsing Logic
             try {
+                let parsedJson: any = {};
                 if (lead.origem) {
                     let parsed = lead.origem;
                     // Handle potential double stringification
@@ -51,24 +101,49 @@ export function LeadsReport() {
                     }
 
                     if (typeof parsed === 'object' && parsed !== null) {
-                        const json = parsed as OriginJSON;
+                        parsedJson = parsed as OriginJSON;
                         const isTraffic =
-                            json.conversionSource === 'FB_Ads' ||
-                            json.sourceType === 'ad' ||
-                            json.entryPointConversionSource === 'ctwa_ad';
+                            parsedJson.conversionSource === 'FB_Ads' ||
+                            parsedJson.sourceType === 'ad' ||
+                            parsedJson.entryPointConversionSource === 'ctwa_ad';
                         source = isTraffic ? 'Tráfego' : 'Orgânico';
                     } else if (typeof parsed === 'string') {
-                        // Simplify known string origins if needed, or default to Organico for unknown simple strings
-                        // Checking common known simple strings if they exist, otherwise Organico
-                        // For now, assuming if it's a simple string and not JSON, might be older organic data
                         source = 'Orgânico';
                     }
                 }
+
+                // Platform Detection Logic (Duplicated from Leads.tsx for consistency)
+                const lowerSourceUrl = (lead.source_url || '').toLowerCase();
+                const lowerConvSource = (lead.conversion_source || '').toLowerCase();
+                const sourceUrl = lowerSourceUrl || (parsedJson.sourceUrl || '').toLowerCase();
+                const convSource = lowerConvSource || (parsedJson.conversionSource || '').toLowerCase();
+                const sourceApp = (parsedJson.sourceApp || '').toLowerCase();
+
+                if (sourceUrl.includes('google') || sourceUrl.includes('gclid')) {
+                    platform = 'Google Ads';
+                    source = 'Tráfego';
+                } else if (sourceUrl.includes('facebook') || convSource === 'fb_ads' || sourceApp === 'facebook') {
+                    platform = 'Facebook Ads';
+                    source = 'Tráfego';
+                } else if (sourceUrl.includes('instagram') || sourceApp === 'instagram') {
+                    platform = 'Instagram Ads';
+                    source = 'Tráfego';
+                } else if (lead.ctwa_clid || parsedJson.ctwaClid) {
+                    platform = 'Meta Ads (WhatsApp)';
+                    source = 'Tráfego';
+                }
+
+                // Collect Ad Data for Top Ads
+                if (sourceUrl && source === 'Tráfego') {
+                    adsCount[sourceUrl] = (adsCount[sourceUrl] || 0) + 1;
+                }
+
             } catch (e) {
                 console.error('Error parsing lead origin', e);
             }
 
-            bySource[source] = (bySource[source] || 0) + 1;
+            // Aggregate by Platform for Pie Chart
+            bySource[platform] = (bySource[platform] || 0) + 1;
 
             const dateKey = format(parseISO(lead.created_at), 'dd/MM');
             if (!timeline[dateKey]) {
@@ -82,17 +157,19 @@ export function LeadsReport() {
         const pieData = Object.entries(bySource).map(([name, value]) => ({
             name,
             value,
-            color: COLORS[name as keyof typeof COLORS] || COLORS['Outros']
+            color: PLATFORM_COLORS[name] || PLATFORM_COLORS['Outros']
         })).sort((a, b) => b.value - a.value);
 
         const timelineData = Object.values(timeline).sort((a, b) => {
-            // Simple string sort works for dd/MM if strictly within same year/month logic, 
-            // but for safety in chart usually we want real dates. 
-            // For now, sorting by date string simple.
             return a.date.localeCompare(b.date);
         });
 
-        return { total, pieData, timelineData };
+        const topAds = Object.entries(adsCount)
+            .sort(([, a], [, b]) => b - a)
+            .slice(0, 2)
+            .map(([url, count]) => ({ url, count }));
+
+        return { total, pieData, timelineData, topAds };
 
     }, [leads]);
 
@@ -130,11 +207,12 @@ export function LeadsReport() {
                     </p>
                 </div>
 
-                {/* Top Sources */}
-                {metrics.pieData.slice(0, 3).map((source) => (
+                {/* Distribution Cards */}
+                {metrics.pieData.slice(0, 2).map((source) => (
                     <div key={source.name} className="glass-card rounded-[2rem] p-6 relative overflow-hidden">
                         <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent" />
                         <div className="flex items-center gap-3 mb-4 relative z-10">
+                            <div className="w-2 h-2 rounded-full" style={{ backgroundColor: source.color }} />
                             <span className="text-xs text-gray-500 uppercase tracking-wider font-bold">{source.name}</span>
                         </div>
                         <p className="text-4xl font-bold text-white relative z-10">{source.value}</p>
@@ -143,6 +221,33 @@ export function LeadsReport() {
                         </p>
                     </div>
                 ))}
+
+                {/* Top Ad Card */}
+                <div className="glass-card rounded-[2rem] p-6 relative overflow-hidden">
+                    <div className="flex items-center gap-3 mb-4">
+                        <span className="text-xs text-gray-500 uppercase tracking-wider font-bold">Top 2 Anúncios</span>
+                    </div>
+                    <div className="space-y-3">
+                        {metrics.topAds.length > 0 ? (
+                            metrics.topAds.map((ad, i) => (
+                                <div key={i} className="flex items-center justify-between text-sm">
+                                    <a
+                                        href={ad.url}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="text-indigo-400 hover:text-indigo-300 truncate max-w-[120px] underline"
+                                        title={ad.url}
+                                    >
+                                        Anúncio {i + 1}
+                                    </a>
+                                    <span className="text-white font-mono bg-white/10 px-2 py-0.5 rounded text-xs">{ad.count} leads</span>
+                                </div>
+                            ))
+                        ) : (
+                            <p className="text-gray-500 text-sm">Nenhum dado de anúncio</p>
+                        )}
+                    </div>
+                </div>
             </div>
 
             {/* Charts Row */}
