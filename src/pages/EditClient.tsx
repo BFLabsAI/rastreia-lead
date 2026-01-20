@@ -13,7 +13,7 @@ interface PhraseOrigin {
 
 export function EditClient() {
     const navigate = useNavigate();
-    const { selectedClient, selectClient, clients } = useClient();
+    const { selectedClient } = useClient();
     const [clientName, setClientName] = useState('');
     const [metaAccountId, setMetaAccountId] = useState('');
     const [googleAccountId, setGoogleAccountId] = useState('');

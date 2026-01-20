@@ -62,7 +62,6 @@ function AppContent() {
     <>
       <Layout
         currentPath={location.pathname}
-        onNavigate={navigate}
         onNewLead={handleNewLead}
       >
         <Routes>
