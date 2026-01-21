@@ -1,15 +1,10 @@
 import { useState, useEffect } from 'react';
-import { Settings, Save, ArrowLeft, Loader2, Trash2, Plus } from 'lucide-react';
+import { Settings, Save, ArrowLeft, Loader2, Trash2, Zap, BarChart3, TrendingUp } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useClient } from '../contexts/ClientContext';
 import { toast } from 'sonner';
-
-interface PhraseOrigin {
-    id: string;
-    frase: string;
-    origem: string;
-}
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 
 export function EditClient() {
     const navigate = useNavigate();
@@ -26,12 +21,8 @@ export function EditClient() {
     const [tipoPagamento, setTipoPagamento] = useState('Cartão');
     const [valorBase, setValorBase] = useState('');
     const [instancia, setInstancia] = useState('');
-
-    // Phrases State
-    const [phrases, setPhrases] = useState<PhraseOrigin[]>([]);
-    const [currentPhrase, setCurrentPhrase] = useState('');
-    const [currentOrigin, setCurrentOrigin] = useState('');
-    const [isLoadingPhrases, setIsLoadingPhrases] = useState(false);
+    const [activeMeta, setActiveMeta] = useState(true);
+    const [activeGoogle, setActiveGoogle] = useState(true);
 
     const [isSaving, setIsSaving] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
@@ -48,81 +39,10 @@ export function EditClient() {
             setTipoPagamento(selectedClient.tipo_pagamento || 'Cartão');
             setValorBase(selectedClient.valor_base?.toString() || '');
             setInstancia(selectedClient.instancia || '');
-
-            loadPhrases(selectedClient.id);
-        } else {
-            // Redirect if no client selected, but let's just warn for now or redirect to home
-            // navigate('/');
+            setActiveMeta(selectedClient.active_meta !== false);
+            setActiveGoogle(selectedClient.active_google !== false);
         }
-    }, [selectedClient, navigate]);
-
-    const loadPhrases = async (clientId: string) => {
-        setIsLoadingPhrases(true);
-        try {
-            const { data, error } = await supabase
-                .from('relatorio_origem')
-                .select('*')
-                .eq('cliente_id', clientId)
-                .order('created_at', { ascending: true });
-
-            if (error) throw error;
-            setPhrases(data || []);
-        } catch (error) {
-            console.error('Error loading phrases:', error);
-            toast.error('Erro ao carregar frases.');
-        } finally {
-            setIsLoadingPhrases(false);
-        }
-    };
-
-    const handleAddPhrase = async () => {
-        if (!selectedClient) return;
-        if (!currentPhrase.trim() || !currentOrigin.trim()) {
-            toast.error('Preencha a frase e a origem');
-            return;
-        }
-
-        try {
-            const { data, error } = await supabase
-                .from('relatorio_origem')
-                .insert([{
-                    cliente_id: selectedClient.id,
-                    frase: currentPhrase.trim(),
-                    origem: currentOrigin.trim()
-                }])
-                .select()
-                .single();
-
-            if (error) throw error;
-
-            setPhrases([...phrases, data]);
-            setCurrentPhrase('');
-            setCurrentOrigin('');
-            toast.success('Frase adicionada com sucesso!');
-        } catch (error) {
-            console.error('Error adding phrase:', error);
-            toast.error('Erro ao adicionar frase.');
-        }
-    };
-
-    const handleDeletePhrase = async (id: string) => {
-        if (!confirm('Tem certeza que deseja remover esta frase?')) return;
-
-        try {
-            const { error } = await supabase
-                .from('relatorio_origem')
-                .delete()
-                .eq('id', id);
-
-            if (error) throw error;
-
-            setPhrases(phrases.filter(p => p.id !== id));
-            toast.success('Frase removida com sucesso!');
-        } catch (error) {
-            console.error('Error deleting phrase:', error);
-            toast.error('Erro ao remover frase.');
-        }
-    };
+    }, [selectedClient]);
 
     const handleUpdateClient = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -144,28 +64,22 @@ export function EditClient() {
             enviar_relatorio_google: enviarRelatorioGoogle,
             status: status,
             tipo_pagamento: tipoPagamento,
-            valor_base: valorBase ? parseFloat(valorBase.replace(',', '.')) : null, // Fix comma handling
-            instancia: instancia.trim() || null
+            valor_base: valorBase ? parseFloat(valorBase.replace(',', '.')) : null,
+            instancia: instancia.trim() || null,
+            active_meta: activeMeta,
+            active_google: activeGoogle
         };
 
-        console.log('Sending Update Payload:', payload);
-
         try {
-            const { data, error } = await supabase
+            const { error } = await supabase
                 .from('relatorio_clientes_bf_labs')
                 .update(payload)
-                .eq('id', selectedClient.id)
-                .select(); // Add select to see returned data
+                .eq('id', selectedClient.id);
 
             if (error) throw error;
 
-            console.log('Update Success, returned:', data);
-
             toast.success('Cliente atualizado com sucesso!');
-            // Update context involves refetching usually, but for now we might need to rely on the context refreshing or manually updating state if exposed.
-            // Assuming context refreshes or we force a reload/re-selection.
-            // Since useClient likely fetches on mount or has a refresh, we might just reload the page or navigate away.
-            window.location.reload(); // Simple way to refresh context data for now
+            window.location.reload();
         } catch (error) {
             console.error('Error updating client:', error);
             toast.error('Erro ao atualizar cliente');
@@ -184,315 +98,278 @@ export function EditClient() {
     }
 
     return (
-        <div className="p-8 max-w-2xl mx-auto">
-            <button
-                onClick={() => navigate(-1)}
-                className="flex items-center gap-2 text-gray-400 hover:text-white mb-8 transition-colors"
-            >
-                <ArrowLeft size={20} />
-                <span>Voltar</span>
-            </button>
+        <div className="p-8 max-w-4xl mx-auto">
+            {/* Header & Navigation */}
+            <div className="flex items-center justify-between mb-8">
+                <button
+                    onClick={() => navigate(-1)}
+                    className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors"
+                >
+                    <ArrowLeft size={20} />
+                    <span>Voltar</span>
+                </button>
+            </div>
 
-            <div className="bg-[#0A0A0A] border border-white/5 rounded-3xl p-8 shadow-2xl">
-                <div className="flex items-center gap-4 mb-8">
-                    <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg shadow-indigo-500/30">
-                        <Settings size={32} className="text-white" />
-                    </div>
-                    <div>
-                        <h1 className="text-2xl font-bold text-white mb-1">Dados do Cliente</h1>
-                        <p className="text-gray-400">Editar informações de {selectedClient.nome}</p>
-                    </div>
+            <div className="bg-[#0A0A0A] border border-white/5 rounded-3xl p-8 shadow-2xl relative overflow-hidden">
+                <div className="absolute top-0 right-0 p-8 opacity-20 pointer-events-none">
+                    <Settings size={120} className="text-white" />
                 </div>
 
-                <form onSubmit={handleUpdateClient} className="space-y-6">
-                    {/* Basic Info */}
-                    <div className="space-y-4">
-                        <h3 className="text-lg font-semibold text-white border-b border-white/10 pb-2">Informações Básicas</h3>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div className="col-span-2">
-                                <label className="block text-sm font-medium text-gray-300 mb-2">
-                                    Nome do Cliente
-                                </label>
-                                <input
-                                    type="text"
-                                    value={clientName}
-                                    onChange={(e) => setClientName(e.target.value)}
-                                    className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-gray-500 focus:border-indigo-500/50 focus:bg-white/10 transition-all outline-none"
-                                    disabled={isSaving}
-                                />
-                            </div>
+                <div className="relative z-10 mb-8">
+                    <h1 className="text-3xl font-bold text-white mb-2">{selectedClient.nome}</h1>
+                    <p className="text-gray-400 flex items-center gap-2">
+                        <span className={`w-2 h-2 rounded-full ${status === 'Ativo' ? 'bg-green-500' : 'bg-red-500'}`} />
+                        {status} • ID: {selectedClient.id}
+                    </p>
+                </div>
 
-                            <div>
-                                <label className="block text-sm font-medium text-gray-300 mb-2">
-                                    Status
-                                </label>
-                                <div className="flex gap-2 p-1 bg-white/5 rounded-xl border border-white/10">
-                                    <button
-                                        type="button"
-                                        onClick={() => setStatus('Ativo')}
-                                        className={`flex-1 py-2 rounded-lg text-sm font-medium transition-all ${status === 'Ativo' ? 'bg-green-500/20 text-green-400 shadow-sm' : 'text-gray-400 hover:text-white'}`}
-                                    >
-                                        Ativo
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onClick={() => setStatus('Inativo')}
-                                        className={`flex-1 py-2 rounded-lg text-sm font-medium transition-all ${status === 'Inativo' ? 'bg-red-500/20 text-red-400 shadow-sm' : 'text-gray-400 hover:text-white'}`}
-                                    >
-                                        Inativo
-                                    </button>
-                                </div>
-                            </div>
+                <form onSubmit={handleUpdateClient}>
+                    <Tabs defaultValue="geral" className="space-y-8">
+                        <TabsList className="bg-white/5 p-1 rounded-xl border border-white/10">
+                            <TabsTrigger value="geral" className="px-6 py-2">Geral</TabsTrigger>
+                            <TabsTrigger value="integracoes" className="px-6 py-2">Integrações & Módulos</TabsTrigger>
+                            <TabsTrigger value="automacao" className="px-6 py-2">Automação</TabsTrigger>
+                            <TabsTrigger value="financeiro" className="px-6 py-2">Financeiro</TabsTrigger>
+                        </TabsList>
 
-                            <div>
-                                <label className="block text-sm font-medium text-gray-300 mb-2">
-                                    Instância
-                                </label>
-                                <input
-                                    type="text"
-                                    value={instancia}
-                                    onChange={(e) => setInstancia(e.target.value)}
-                                    placeholder="Ex: instancia_01"
-                                    className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-gray-500 focus:border-indigo-500/50 focus:bg-white/10 transition-all outline-none"
-                                    disabled={isSaving}
-                                />
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* IDs & Accounts */}
-                    <div className="space-y-4">
-                        <h3 className="text-lg font-semibold text-white border-b border-white/10 pb-2">IDs das Contas</h3>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div>
-                                <label className="block text-sm font-medium text-gray-300 mb-2">
-                                    ID Conta Meta Ads
-                                </label>
-                                <input
-                                    type="text"
-                                    value={metaAccountId}
-                                    onChange={(e) => setMetaAccountId(e.target.value)}
-                                    className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-gray-500 focus:border-indigo-500/50 focus:bg-white/10 transition-all outline-none"
-                                    disabled={isSaving}
-                                />
-                            </div>
-
-                            <div>
-                                <label className="block text-sm font-medium text-gray-300 mb-2">
-                                    ID Conta Google Ads
-                                </label>
-                                <input
-                                    type="text"
-                                    value={googleAccountId}
-                                    onChange={(e) => setGoogleAccountId(e.target.value)}
-                                    className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-gray-500 focus:border-indigo-500/50 focus:bg-white/10 transition-all outline-none"
-                                    disabled={isSaving}
-                                />
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Phrase & Origin - New Section */}
-                    <div className="space-y-4">
-                        <h3 className="text-lg font-semibold text-white border-b border-white/10 pb-2">Frases e Origens</h3>
-                        <div className="space-y-4">
-                            <div className="flex gap-4 items-end">
-                                <div className="flex-1">
-                                    <label className="block text-sm font-medium text-gray-300 mb-2">
-                                        Frase
-                                    </label>
+                        {/* TAB: GERAL */}
+                        <TabsContent value="geral" className="space-y-6 animate-in slide-in-from-left-4 duration-500">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-300 mb-2">Nome do Cliente</label>
                                     <input
                                         type="text"
-                                        value={currentPhrase}
-                                        onChange={(e) => setCurrentPhrase(e.target.value)}
-                                        placeholder="Ex: Olá, vim pelo Instagram"
-                                        className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-gray-500 focus:border-indigo-500/50 focus:bg-white/10 transition-all outline-none"
+                                        value={clientName}
+                                        onChange={(e) => setClientName(e.target.value)}
+                                        className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white focus:border-indigo-500/50 focus:bg-white/10 transition-all outline-none"
                                         disabled={isSaving}
                                     />
                                 </div>
-                                <div className="flex-1">
-                                    <label className="block text-sm font-medium text-gray-300 mb-2">
-                                        Origem
-                                    </label>
-                                    <input
-                                        type="text"
-                                        value={currentOrigin}
-                                        onChange={(e) => setCurrentOrigin(e.target.value)}
-                                        placeholder="Ex: Instagram"
-                                        className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-gray-500 focus:border-indigo-500/50 focus:bg-white/10 transition-all outline-none"
-                                        disabled={isSaving}
-                                    />
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-300 mb-2">Status do Contrato</label>
+                                    <div className="flex gap-2 p-1 bg-white/5 rounded-xl border border-white/10">
+                                        <button
+                                            type="button"
+                                            onClick={() => setStatus('Ativo')}
+                                            className={`flex-1 py-2 rounded-lg text-sm font-medium transition-all ${status === 'Ativo' ? 'bg-green-500/20 text-green-400 shadow-sm' : 'text-gray-400 hover:text-white'}`}
+                                        >
+                                            Ativo
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => setStatus('Inativo')}
+                                            className={`flex-1 py-2 rounded-lg text-sm font-medium transition-all ${status === 'Inativo' ? 'bg-red-500/20 text-red-400 shadow-sm' : 'text-gray-400 hover:text-white'}`}
+                                        >
+                                            Inativo
+                                        </button>
+                                    </div>
                                 </div>
-                                <button
-                                    type="button"
-                                    onClick={handleAddPhrase}
-                                    disabled={isSaving}
-                                    className="p-3 rounded-xl bg-indigo-500/20 text-indigo-400 hover:bg-indigo-500 hover:text-white transition-colors border border-indigo-500/30"
-                                >
-                                    <Plus size={24} />
-                                </button>
                             </div>
+                        </TabsContent>
 
-                            {/* List of added phrases */}
-                            {isLoadingPhrases ? (
-                                <div className="flex justify-center p-4">
-                                    <Loader2 className="animate-spin text-gray-500" />
-                                </div>
-                            ) : phrases.length > 0 ? (
-                                <div className="space-y-2 mt-4">
-                                    {phrases.map((item) => (
-                                        <div key={item.id} className="flex items-center justify-between p-3 bg-white/5 rounded-xl border border-white/10">
-                                            <div className="flex items-center gap-4">
-                                                <div className="px-3 py-1 rounded-lg bg-indigo-500/20 text-indigo-400 text-sm font-medium">
-                                                    {item.origem}
-                                                </div>
-                                                <span className="text-gray-300">{item.frase}</span>
-                                            </div>
-                                            <button
-                                                type="button"
-                                                onClick={() => handleDeletePhrase(item.id)}
-                                                className="p-2 text-gray-500 hover:text-red-400 transition-colors"
-                                            >
-                                                <Trash2 size={18} />
-                                            </button>
+                        {/* TAB: INTEGRAÇÕES */}
+                        <TabsContent value="integracoes" className="space-y-8 animate-in slide-in-from-left-4 duration-500">
+                            {/* Módulos */}
+                            <div className="space-y-4">
+                                <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+                                    <Zap size={18} className="text-yellow-500" /> Módulos Ativos
+                                </h3>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div className="bg-white/5 rounded-xl p-4 border border-white/10 flex items-center justify-between gap-4">
+                                        <div>
+                                            <span className="text-sm font-medium text-white block">Meta Ads</span>
+                                            <span className="text-xs text-gray-500">Ativa dashboards e relatórios do Meta</span>
                                         </div>
-                                    ))}
+                                        <button
+                                            type="button"
+                                            onClick={() => setActiveMeta(!activeMeta)}
+                                            className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${activeMeta ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/20' : 'bg-gray-800 text-gray-500'}`}
+                                        >
+                                            {activeMeta ? 'ON' : 'OFF'}
+                                        </button>
+                                    </div>
+                                    <div className="bg-white/5 rounded-xl p-4 border border-white/10 flex items-center justify-between gap-4">
+                                        <div>
+                                            <span className="text-sm font-medium text-white block">Google Ads</span>
+                                            <span className="text-xs text-gray-500">Ativa dashboards e relatórios do Google</span>
+                                        </div>
+                                        <button
+                                            type="button"
+                                            onClick={() => setActiveGoogle(!activeGoogle)}
+                                            className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${activeGoogle ? 'bg-yellow-600 text-white shadow-lg shadow-yellow-600/20' : 'bg-gray-800 text-gray-500'}`}
+                                        >
+                                            {activeGoogle ? 'ON' : 'OFF'}
+                                        </button>
+                                    </div>
                                 </div>
-                            ) : (
-                                <div className="text-center p-4 text-gray-500 text-sm bg-white/5 rounded-xl border border-dashed border-white/10">
-                                    Nenhuma frase cadastrada
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-white/5">
+                                <div className="space-y-4">
+                                    <h3 className="text-lg font-semibold text-white">IDs de Contas</h3>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-300 mb-2">ID Conta Meta Ads</label>
+                                        <input
+                                            type="text"
+                                            value={metaAccountId}
+                                            onChange={(e) => setMetaAccountId(e.target.value)}
+                                            className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white focus:border-indigo-500/50 focus:bg-white/10 outline-none"
+                                            disabled={isSaving}
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-300 mb-2">ID Conta Google Ads</label>
+                                        <input
+                                            type="text"
+                                            value={googleAccountId}
+                                            onChange={(e) => setGoogleAccountId(e.target.value)}
+                                            className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white focus:border-indigo-500/50 focus:bg-white/10 outline-none"
+                                            disabled={isSaving}
+                                        />
+                                    </div>
                                 </div>
-                            )}
-                        </div>
-                    </div>
 
+                                <div className="space-y-4">
+                                    <h3 className="text-lg font-semibold text-white">Conexão WhatsApp</h3>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-300 mb-2">Instância Vinculada (Opcional)</label>
+                                        <input
+                                            type="text"
+                                            value={instancia}
+                                            onChange={(e) => setInstancia(e.target.value)}
+                                            placeholder="Ex: whatsapp_vendas_01"
+                                            className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white focus:border-indigo-500/50 focus:bg-white/10 outline-none"
+                                            disabled={isSaving}
+                                        />
+                                        <p className="text-xs text-gray-500 mt-2">Nome da instância no servidor UazAPI.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </TabsContent>
 
-                    {/* Automatizações (Booleans) */}
-                    <div className="space-y-4">
-                        <h3 className="text-lg font-semibold text-white border-b border-white/10 pb-2">Configurações de Automação</h3>
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                            {/* Enviar Relatório Meta */}
-                            <div className="bg-white/5 rounded-xl p-4 border border-white/10 flex flex-col items-center justify-between gap-4">
-                                <span className="text-sm font-medium text-gray-300 text-center">Enviar Relatório Meta</span>
-                                <button
-                                    type="button"
-                                    onClick={() => setEnviarRelatorioMeta(!enviarRelatorioMeta)}
-                                    className={`w-full py-2 rounded-lg text-sm font-bold transition-all ${enviarRelatorioMeta ? 'bg-indigo-500 text-white shadow-lg shadow-indigo-500/20' : 'bg-gray-700 text-gray-400 hover:bg-gray-600'}`}
-                                >
-                                    {enviarRelatorioMeta ? 'SIM' : 'NÃO'}
-                                </button>
-                            </div>
-                            {/* Checar Saldo Meta */}
-                            <div className="bg-white/5 rounded-xl p-4 border border-white/10 flex flex-col items-center justify-between gap-4">
-                                <span className="text-sm font-medium text-gray-300 text-center">Checar Saldo Meta</span>
-                                <button
-                                    type="button"
-                                    onClick={() => setChecarSaldoMeta(!checarSaldoMeta)}
-                                    className={`w-full py-2 rounded-lg text-sm font-bold transition-all ${checarSaldoMeta ? 'bg-indigo-500 text-white shadow-lg shadow-indigo-500/20' : 'bg-gray-700 text-gray-400 hover:bg-gray-600'}`}
-                                >
-                                    {checarSaldoMeta ? 'SIM' : 'NÃO'}
-                                </button>
-                            </div>
-                            {/* Enviar Relatório Google */}
-                            <div className="bg-white/5 rounded-xl p-4 border border-white/10 flex flex-col items-center justify-between gap-4">
-                                <span className="text-sm font-medium text-gray-300 text-center">Enviar Relatório Google</span>
-                                <button
-                                    type="button"
-                                    onClick={() => setEnviarRelatorioGoogle(!enviarRelatorioGoogle)}
-                                    className={`w-full py-2 rounded-lg text-sm font-bold transition-all ${enviarRelatorioGoogle ? 'bg-indigo-500 text-white shadow-lg shadow-indigo-500/20' : 'bg-gray-700 text-gray-400 hover:bg-gray-600'}`}
-                                >
-                                    {enviarRelatorioGoogle ? 'SIM' : 'NÃO'}
-                                </button>
-                            </div>
-                        </div>
-                    </div>
+                        {/* TAB: AUTOMAÇÃO */}
+                        <TabsContent value="automacao" className="space-y-6 animate-in slide-in-from-left-4 duration-500">
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                {/* Enviar Relatório Meta */}
+                                <div className="bg-white/5 rounded-xl p-6 border border-white/10 flex flex-col items-center text-center gap-4 hover:bg-white/10 transition-colors">
+                                    <div className={`p-3 rounded-full ${enviarRelatorioMeta ? 'bg-indigo-500/20 text-indigo-400' : 'bg-gray-800 text-gray-600'}`}>
+                                        <BarChart3 size={24} />
+                                    </div>
+                                    <div>
+                                        <span className="text-sm font-medium text-white block">Relatório Meta</span>
+                                        <span className="text-xs text-gray-500">Envio automático mensal</span>
+                                    </div>
+                                    <button
+                                        type="button"
+                                        onClick={() => setEnviarRelatorioMeta(!enviarRelatorioMeta)}
+                                        className={`w-full py-2 rounded-lg text-xs font-bold transition-all ${enviarRelatorioMeta ? 'bg-indigo-600 text-white' : 'bg-gray-700 text-gray-400'}`}
+                                    >
+                                        {enviarRelatorioMeta ? 'ATIVADO' : 'DESATIVADO'}
+                                    </button>
+                                </div>
 
-                    {/* Financeiro */}
-                    <div className="space-y-4">
-                        <h3 className="text-lg font-semibold text-white border-b border-white/10 pb-2">Financeiro</h3>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div>
-                                <label className="block text-sm font-medium text-gray-300 mb-2">
-                                    Forma de Pagamento
-                                </label>
-                                <select
-                                    value={tipoPagamento}
-                                    onChange={(e) => setTipoPagamento(e.target.value)}
-                                    className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white focus:border-indigo-500/50 focus:bg-white/10 transition-all outline-none appearance-none"
-                                    disabled={isSaving}
-                                >
-                                    <option value="Cartão" className="bg-[#0A0A0A]">Cartão de Crédito</option>
-                                    <option value="Boleto" className="bg-[#0A0A0A]">Boleto Bancário</option>
-                                </select>
+                                {/* Checar Saldo */}
+                                <div className="bg-white/5 rounded-xl p-6 border border-white/10 flex flex-col items-center text-center gap-4 hover:bg-white/10 transition-colors">
+                                    <div className={`p-3 rounded-full ${checarSaldoMeta ? 'bg-green-500/20 text-green-400' : 'bg-gray-800 text-gray-600'}`}>
+                                        <div className="font-bold text-lg">$</div>
+                                    </div>
+                                    <div>
+                                        <span className="text-sm font-medium text-white block">Alerta de Saldo</span>
+                                        <span className="text-xs text-gray-500">Notificar saldo baixo (Meta)</span>
+                                    </div>
+                                    <button
+                                        type="button"
+                                        onClick={() => setChecarSaldoMeta(!checarSaldoMeta)}
+                                        className={`w-full py-2 rounded-lg text-xs font-bold transition-all ${checarSaldoMeta ? 'bg-green-600 text-white' : 'bg-gray-700 text-gray-400'}`}
+                                    >
+                                        {checarSaldoMeta ? 'ATIVADO' : 'DESATIVADO'}
+                                    </button>
+                                </div>
+
+                                {/* Enviar Relatório Google */}
+                                <div className="bg-white/5 rounded-xl p-6 border border-white/10 flex flex-col items-center text-center gap-4 hover:bg-white/10 transition-colors">
+                                    <div className={`p-3 rounded-full ${enviarRelatorioGoogle ? 'bg-yellow-500/20 text-yellow-400' : 'bg-gray-800 text-gray-600'}`}>
+                                        <TrendingUp size={24} />
+                                    </div>
+                                    <div>
+                                        <span className="text-sm font-medium text-white block">Relatório Google</span>
+                                        <span className="text-xs text-gray-500">Envio automático mensal</span>
+                                    </div>
+                                    <button
+                                        type="button"
+                                        onClick={() => setEnviarRelatorioGoogle(!enviarRelatorioGoogle)}
+                                        className={`w-full py-2 rounded-lg text-xs font-bold transition-all ${enviarRelatorioGoogle ? 'bg-yellow-600 text-white' : 'bg-gray-700 text-gray-400'}`}
+                                    >
+                                        {enviarRelatorioGoogle ? 'ATIVADO' : 'DESATIVADO'}
+                                    </button>
+                                </div>
                             </div>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-300 mb-2">
-                                    Valor Base (Recarga)
-                                </label>
-                                <div className="relative">
-                                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500">R$</span>
-                                    <input
-                                        type="number"
-                                        value={valorBase}
-                                        onChange={(e) => setValorBase(e.target.value)}
-                                        placeholder="0,00"
-                                        step="0.01"
-                                        className="w-full pl-10 pr-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-gray-500 focus:border-indigo-500/50 focus:bg-white/10 transition-all outline-none"
+                        </TabsContent>
+
+                        {/* TAB: FINANCEIRO */}
+                        <TabsContent value="financeiro" className="space-y-6 animate-in slide-in-from-left-4 duration-500">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-300 mb-2">Forma de Pagamento</label>
+                                    <select
+                                        value={tipoPagamento}
+                                        onChange={(e) => setTipoPagamento(e.target.value)}
+                                        className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white focus:border-indigo-500/50 outline-none appearance-none"
                                         disabled={isSaving}
-                                    />
+                                    >
+                                        <option value="Cartão" className="bg-[#0A0A0A]">Cartão de Crédito</option>
+                                        <option value="Boleto" className="bg-[#0A0A0A]">Boleto Bancário</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-300 mb-2">Valor Base (Recarga Mensal)</label>
+                                    <div className="relative">
+                                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500">R$</span>
+                                        <input
+                                            type="number"
+                                            value={valorBase}
+                                            onChange={(e) => setValorBase(e.target.value)}
+                                            placeholder="0,00"
+                                            step="0.01"
+                                            className="w-full pl-10 pr-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white focus:border-indigo-500/50 outline-none"
+                                            disabled={isSaving}
+                                        />
+                                    </div>
+                                    <p className="text-xs text-gray-500 mt-2">Valor de referência para cálculos de retorno.</p>
                                 </div>
                             </div>
-                        </div>
-                    </div>
+                        </TabsContent>
 
-                    <div className="pt-4 border-t border-white/10 flex justify-between items-center">
-                        <div className="flex items-center gap-4">
-                            <div className="text-xs text-gray-500">
-                                ID: {selectedClient.id}
-                            </div>
-                            <button
-                                type="button"
-                                onClick={async () => {
-                                    if (window.confirm('Tem certeza que deseja excluir este cliente? Esta ação não pode ser desfeita.')) {
-                                        setIsDeleting(true);
-                                        try {
-                                            const { error } = await supabase
-                                                .from('relatorio_clientes_bf_labs')
-                                                .delete()
-                                                .eq('id', selectedClient.id);
-                                            if (error) throw error;
-                                            toast.success('Cliente excluído com sucesso');
-                                            window.location.href = '/';
-                                        } catch (error) {
-                                            console.error('Error deleting client:', error);
-                                            toast.error('Erro ao excluir cliente');
-                                            setIsDeleting(false);
-                                        }
-                                    }
-                                }}
-                                className="flex items-center gap-2 text-red-400 hover:text-red-300 text-sm font-medium transition-colors"
-                                disabled={isDeleting || isSaving}
-                            >
-                                <Trash2 size={16} />
-                                <span className="hidden sm:inline">Excluir Cliente</span>
-                            </button>
-                        </div>
+                    </Tabs>
+
+                    <div className="pt-8 border-t border-white/10 flex justify-between items-center mt-8">
+                        <button
+                            type="button"
+                            onClick={async () => {
+                                if (window.confirm('Tem certeza que deseja excluir ESTE CLIENTE? Todos os dados serão perdidos permanente.')) {
+                                    setIsDeleting(true);
+                                    try {
+                                        const { error } = await supabase.from('relatorio_clientes_bf_labs').delete().eq('id', selectedClient.id);
+                                        if (error) throw error;
+                                        toast.success('Cliente excluído');
+                                        window.location.href = '/';
+                                    } catch (e) { toast.error('Erro ao excluir'); setIsDeleting(false); }
+                                }
+                            }}
+                            className="flex items-center gap-2 text-red-500/60 hover:text-red-400 text-sm font-medium transition-colors"
+                            disabled={isDeleting || isSaving}
+                        >
+                            {isDeleting ? <Loader2 className="animate-spin w-4 h-4" /> : <Trash2 size={16} />}
+                            {isDeleting ? 'Excluindo...' : 'Excluir Cliente'}
+                        </button>
+
                         <button
                             type="submit"
-                            className="px-6 py-3 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-bold shadow-lg shadow-indigo-500/30 hover:shadow-indigo-500/50 transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="px-8 py-3 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-bold shadow-lg shadow-indigo-500/30 transition-all flex items-center gap-2"
                             disabled={isSaving}
                         >
-                            {isSaving ? (
-                                <>
-                                    <Loader2 className="w-5 h-5 animate-spin" />
-                                    Salvando...
-                                </>
-                            ) : (
-                                <>
-                                    <Save size={20} />
-                                    Salvar Alterações
-                                </>
-                            )}
+                            {isSaving ? <Loader2 className="animate-spin" /> : <Save size={20} />}
+                            Salvar Alterações
                         </button>
                     </div>
                 </form>

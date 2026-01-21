@@ -25,6 +25,8 @@ export function CreateClient() {
     const [tipoPagamento, setTipoPagamento] = useState('Cartão');
     const [valorBase, setValorBase] = useState('');
     const [instancia, setInstancia] = useState('');
+    const [activeMeta, setActiveMeta] = useState(true);
+    const [activeGoogle, setActiveGoogle] = useState(true);
 
     // Phrases State
     const [phrases, setPhrases] = useState<PhraseOrigin[]>([]);
@@ -83,7 +85,9 @@ export function CreateClient() {
                     status: status,
                     tipo_pagamento: tipoPagamento,
                     valor_base: valorBase ? parseFloat(valorBase.replace(',', '.')) : null,
-                    instancia: instancia.trim() || null
+                    instancia: instancia.trim() || null,
+                    active_meta: activeMeta,
+                    active_google: activeGoogle
                 }])
                 .select()
                 .single();
@@ -307,6 +311,30 @@ export function CreateClient() {
                     <div className="space-y-4">
                         <h3 className="text-lg font-semibold text-white border-b border-white/10 pb-2">Configurações de Automação</h3>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+
+                            {/* Active Modules */}
+                            <div className="col-span-1 md:col-span-3 grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
+                                <div className="bg-white/5 rounded-xl p-4 border border-white/10 flex items-center justify-between gap-4">
+                                    <span className="text-sm font-medium text-gray-300">Módulo Meta Ads</span>
+                                    <button
+                                        type="button"
+                                        onClick={() => setActiveMeta(!activeMeta)}
+                                        className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${activeMeta ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/20' : 'bg-gray-700 text-gray-400 hover:bg-gray-600'}`}
+                                    >
+                                        {activeMeta ? 'ATIVO' : 'INATIVO'}
+                                    </button>
+                                </div>
+                                <div className="bg-white/5 rounded-xl p-4 border border-white/10 flex items-center justify-between gap-4">
+                                    <span className="text-sm font-medium text-gray-300">Módulo Google Ads</span>
+                                    <button
+                                        type="button"
+                                        onClick={() => setActiveGoogle(!activeGoogle)}
+                                        className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${activeGoogle ? 'bg-yellow-600 text-white shadow-lg shadow-yellow-600/20' : 'bg-gray-700 text-gray-400 hover:bg-gray-600'}`}
+                                    >
+                                        {activeGoogle ? 'ATIVO' : 'INATIVO'}
+                                    </button>
+                                </div>
+                            </div>
 
                             {/* Enviar Relatório Meta */}
                             <div className="bg-white/5 rounded-xl p-4 border border-white/10 flex flex-col items-center justify-between gap-4">

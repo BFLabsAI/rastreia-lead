@@ -43,8 +43,11 @@ export function LeadsReport() {
             if (!selectedClient) return;
 
             setLoading(true);
-            const startDateStr = format(startOfDay(dateRange.startDate), 'yyyy-MM-dd');
-            const endDateStr = format(endOfDay(dateRange.endDate), 'yyyy-MM-dd');
+            // Fix: Use full ISO string or strictly formatted timestamp to ensure time component is included
+            // startOfDay gives 00:00:00, endOfDay gives 23:59:59.999
+            // Using ISOString ensures Supabase receives the full timestamp
+            const startDateStr = startOfDay(dateRange.startDate).toISOString();
+            const endDateStr = endOfDay(dateRange.endDate).toISOString();
 
             const { data, error } = await supabase
                 .from('relatorio_leads_cliente')
@@ -131,6 +134,22 @@ export function LeadsReport() {
                 } else if (lead.ctwa_clid || parsedJson.ctwaClid) {
                     platform = 'Meta Ads (WhatsApp)';
                     source = 'Tráfego';
+                } else if (lead.conversion_source) {
+                    // If we have an explicit conversion source, use it as the platform name
+                    // e.g. "Manual", "Import", "Google Organic"
+                    platform = lead.conversion_source;
+                    // Keep source as 'Outros' or 'Orgânico' based on context? 
+                    // For now, if it's defined but not an Ad, let's keep it distinct from generic 'Orgânico' if possible,
+                    // but the timeline only tracks 'trafego' vs 'organico'. 
+                    // Let's assume non-ads with a source are 'Orgânico' in the broad sense (non-paid), 
+                    // or we could map them to 'Outros' in the timeline.
+                    // Given the user complaint "showing 2 organic origins", they probably want to see the NAME "Manual" etc in the Pie Chart.
+                    // The Pie Chart uses 'platform'.
+                }
+
+                // If platform is still generic 'Orgânico' but we have parsed data indicating otherwise?
+                if (platform === 'Orgânico' && parsedJson.conversionSource) {
+                    platform = parsedJson.conversionSource;
                 }
 
                 // Collect Ad Data for Top Ads

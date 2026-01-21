@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
 import { supabase } from '../lib/supabase';
+import { useAuthStore } from '../store/authStore';
 
 export interface Client {
     id: string; // uuid
@@ -13,6 +14,8 @@ export interface Client {
     tipo_pagamento?: string; // 'Cartão' | 'Boleto'
     valor_base?: number | string; // DB is text currently, but we treat as number
     instancia?: string;
+    active_meta?: boolean;
+    active_google?: boolean;
 }
 
 interface ClientContextType {
@@ -29,27 +32,57 @@ export function ClientProvider({ children }: { children: ReactNode }) {
     const [selectedClient, setSelectedClient] = useState<Client | null>(null);
     const [isLoading, setIsLoading] = useState(true);
 
+    const { user, isAuthenticated } = useAuthStore();
+
     useEffect(() => {
-        fetchClients();
-    }, []);
+        if (isAuthenticated) {
+            fetchClients();
+        }
+    }, [isAuthenticated, user]);
 
     const fetchClients = async () => {
         setIsLoading(true);
         const { data, error } = await supabase
             .from('relatorio_clientes_bf_labs')
-            .select('*') // Select all to ensure we get new fields
+            .select('*')
             .order('nome');
 
         if (error) {
             console.error('Error fetching clients:', error);
         } else {
-            setClients(data || []);
+            // Helper to get user from store non-reactively or just user localStorage for this pure function
+            // Best is to use useAuthStore.getState()
+            const user = useAuthStore.getState().user;
+
+            let filteredClients = data || [];
+
+            if (user && user.role !== 'super_admin') {
+                // If user is restricted (admin or user), filter by client_ids
+                // e.g. ["client_id_1"]
+                const allowed = user.client_ids || [];
+                // Check if * is present (just in case)
+                if (!allowed.includes('*')) {
+                    filteredClients = filteredClients.filter(c => allowed.includes(c.id));
+                }
+            } else if (user && user.role === 'super_admin') {
+                // Show all
+            } else {
+                // No user? Should not happen if behind auth wall, but safer to show empty
+                // But wait, fetchClients runs on mount. If not logged in?
+                // The App protects the routes, but context might init first.
+                // Let's assume if no user, empty list.
+                if (!user) filteredClients = [];
+            }
+
+            setClients(filteredClients);
+
             // Auto-select first client if none selected
-            if (data && data.length > 0 && !selectedClient) {
-                // Try to restore from localStorage or default to first
+            if (filteredClients.length > 0 && !selectedClient) {
                 const savedId = localStorage.getItem('bf_selected_client_id');
-                const found = data.find(c => c.id === savedId) || data[0];
+                const found = filteredClients.find(c => c.id === savedId) || filteredClients[0];
                 setSelectedClient(found);
+            } else if (filteredClients.length === 0) {
+                setSelectedClient(null);
             }
         }
         setIsLoading(false);

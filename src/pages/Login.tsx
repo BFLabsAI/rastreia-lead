@@ -1,13 +1,13 @@
-
 import { useState } from 'react';
-import { supabase } from '../lib/supabase';
 import { Lock, Mail, Loader2, ArrowRight } from 'lucide-react';
 import { toast } from 'sonner';
+import { useAuthStore } from '../store/authStore';
 
 export function Login() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
-    const [isLoading, setIsLoading] = useState(false);
+    const login = useAuthStore((state) => state.login);
+    const isLoading = useAuthStore((state) => state.isLoading);
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -17,22 +17,12 @@ export function Login() {
             return;
         }
 
-        setIsLoading(true);
+        const { success, error } = await login(email, password);
 
-        try {
-            const { error } = await supabase.auth.signInWithPassword({
-                email,
-                password
-            });
-
-            if (error) throw error;
-
-            // App.tsx auth listener will handle redirect/state update
-        } catch (error) {
-            console.error('Login error:', error);
-            toast.error('Erro ao fazer login. Verifique suas credenciais.');
-        } finally {
-            setIsLoading(false);
+        if (!success) {
+            toast.error(error || 'Erro ao fazer login');
+        } else {
+            toast.success('Login realizado com sucesso!');
         }
     };
 

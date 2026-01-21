@@ -116,6 +116,9 @@ export function Dashboard() {
         return `R$ ${value.toFixed(2)}`;
     };
 
+    const activeMeta = selectedClient?.active_meta !== false;
+    const activeGoogle = selectedClient?.active_google !== false;
+
     return (
         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
 
@@ -129,87 +132,91 @@ export function Dashboard() {
                 </div>
             </div>
 
-            {/* Hero Cards Grid - VERTICAL LAYOUT */}
+            {/* Hero Cards Grid */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
 
                 {/* Meta Ads Card */}
-                <div className="glass-card rounded-[2rem] p-6 relative overflow-hidden group h-[26rem] flex flex-col justify-between">
-                    <div className="absolute inset-0 bg-gradient-to-b from-cyan-500/5 to-transparent opacity-50 group-hover:opacity-100 transition-opacity duration-500" />
+                {activeMeta && (
+                    <div className="glass-card rounded-[2rem] p-6 relative overflow-hidden group h-[26rem] flex flex-col justify-between">
+                        <div className="absolute inset-0 bg-gradient-to-b from-cyan-500/5 to-transparent opacity-50 group-hover:opacity-100 transition-opacity duration-500" />
 
-                    {/* Top Icon */}
-                    <div className="flex flex-col items-center relative z-10 pt-4">
-                        <div className="w-14 h-14 rounded-2xl bg-[#0F172A] border border-cyan-500/30 flex items-center justify-center text-cyan-400 shadow-[0_0_15px_rgba(6,182,212,0.15)] mb-4">
-                            <Zap size={28} />
+                        {/* Top Icon */}
+                        <div className="flex flex-col items-center relative z-10 pt-4">
+                            <div className="w-14 h-14 rounded-2xl bg-[#0F172A] border border-cyan-500/30 flex items-center justify-center text-cyan-400 shadow-[0_0_15px_rgba(6,182,212,0.15)] mb-4">
+                                <Zap size={28} />
+                            </div>
+                            <span className="text-gray-400 font-medium text-sm tracking-widest uppercase">Meta Ads</span>
                         </div>
-                        <span className="text-gray-400 font-medium text-sm tracking-widest uppercase">Meta Ads</span>
-                    </div>
 
-                    {/* Main Value */}
-                    <div className="text-center relative z-10">
-                        <div className="flex items-baseline justify-center gap-1">
-                            <span className="text-5xl font-bold text-white tracking-tighter drop-shadow-lg">
-                                {isLoading ? '...' : formatCurrency(metaTotal)}
-                            </span>
+                        {/* Main Value */}
+                        <div className="text-center relative z-10">
+                            <div className="flex items-baseline justify-center gap-1">
+                                <span className="text-5xl font-bold text-white tracking-tighter drop-shadow-lg">
+                                    {isLoading ? '...' : formatCurrency(metaTotal)}
+                                </span>
+                            </div>
+                            <p className="text-cyan-400/80 text-xs mt-2 font-medium bg-cyan-500/10 py-1 px-3 rounded-full inline-block border border-cyan-500/20">
+                                TOTAL INVESTIDO
+                            </p>
                         </div>
-                        <p className="text-cyan-400/80 text-xs mt-2 font-medium bg-cyan-500/10 py-1 px-3 rounded-full inline-block border border-cyan-500/20">
-                            TOTAL INVESTIDO
-                        </p>
-                    </div>
 
-                    {/* Chart Area */}
-                    <div className="h-24 -mx-6 -mb-6 relative">
-                        <div className="absolute inset-0 bg-gradient-to-t from-cyan-500/10 to-transparent pointer-events-none" />
-                        <ResponsiveContainer width="100%" height="100%">
-                            <AreaChart data={metaChartData.length > 0 ? metaChartData : [{ val: 0 }]}>
-                                <defs>
-                                    <linearGradient id="colorMeta" x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="5%" stopColor="#06B6D4" stopOpacity={0.4} />
-                                        <stop offset="95%" stopColor="#06B6D4" stopOpacity={0} />
-                                    </linearGradient>
-                                </defs>
-                                <Area type="monotone" dataKey="val" stroke="#06B6D4" strokeWidth={3} fill="url(#colorMeta)" />
-                            </AreaChart>
-                        </ResponsiveContainer>
+                        {/* Chart Area */}
+                        <div className="h-24 -mx-6 -mb-6 relative">
+                            <div className="absolute inset-0 bg-gradient-to-t from-cyan-500/10 to-transparent pointer-events-none" />
+                            <ResponsiveContainer width="100%" height="100%">
+                                <AreaChart data={metaChartData.length > 0 ? metaChartData : [{ val: 0 }]}>
+                                    <defs>
+                                        <linearGradient id="colorMeta" x1="0" y1="0" x2="0" y2="1">
+                                            <stop offset="5%" stopColor="#06B6D4" stopOpacity={0.4} />
+                                            <stop offset="95%" stopColor="#06B6D4" stopOpacity={0} />
+                                        </linearGradient>
+                                    </defs>
+                                    <Area type="monotone" dataKey="val" stroke="#06B6D4" strokeWidth={3} fill="url(#colorMeta)" />
+                                </AreaChart>
+                            </ResponsiveContainer>
+                        </div>
                     </div>
-                </div>
+                )}
 
                 {/* Google Ads Card */}
-                <div className="glass-card rounded-[2rem] p-6 relative overflow-hidden group h-[26rem] flex flex-col justify-between">
-                    <div className="absolute inset-0 bg-gradient-to-b from-lime-500/5 to-transparent opacity-50 group-hover:opacity-100 transition-opacity duration-500" />
+                {activeGoogle && (
+                    <div className="glass-card rounded-[2rem] p-6 relative overflow-hidden group h-[26rem] flex flex-col justify-between">
+                        <div className="absolute inset-0 bg-gradient-to-b from-lime-500/5 to-transparent opacity-50 group-hover:opacity-100 transition-opacity duration-500" />
 
-                    <div className="flex flex-col items-center relative z-10 pt-4">
-                        <div className="w-14 h-14 rounded-2xl bg-[#0F172A] border border-lime-500/30 flex items-center justify-center text-lime-400 shadow-[0_0_15px_rgba(34,197,94,0.15)] mb-4">
-                            <TrendingUp size={28} />
+                        <div className="flex flex-col items-center relative z-10 pt-4">
+                            <div className="w-14 h-14 rounded-2xl bg-[#0F172A] border border-lime-500/30 flex items-center justify-center text-lime-400 shadow-[0_0_15px_rgba(34,197,94,0.15)] mb-4">
+                                <TrendingUp size={28} />
+                            </div>
+                            <span className="text-gray-400 font-medium text-sm tracking-widest uppercase">Google Ads</span>
                         </div>
-                        <span className="text-gray-400 font-medium text-sm tracking-widest uppercase">Google Ads</span>
-                    </div>
 
-                    <div className="text-center relative z-10">
-                        <div className="flex items-baseline justify-center gap-1">
-                            <span className="text-5xl font-bold text-white tracking-tighter drop-shadow-lg">
-                                {isLoading ? '...' : formatCurrency(googleTotal)}
-                            </span>
+                        <div className="text-center relative z-10">
+                            <div className="flex items-baseline justify-center gap-1">
+                                <span className="text-5xl font-bold text-white tracking-tighter drop-shadow-lg">
+                                    {isLoading ? '...' : formatCurrency(googleTotal)}
+                                </span>
+                            </div>
+                            <p className="text-lime-400/80 text-xs mt-2 font-medium bg-lime-500/10 py-1 px-3 rounded-full inline-block border border-lime-500/20">
+                                TOTAL INVESTIDO
+                            </p>
                         </div>
-                        <p className="text-lime-400/80 text-xs mt-2 font-medium bg-lime-500/10 py-1 px-3 rounded-full inline-block border border-lime-500/20">
-                            TOTAL INVESTIDO
-                        </p>
-                    </div>
 
-                    <div className="h-24 -mx-6 -mb-6 relative">
-                        <div className="absolute inset-0 bg-gradient-to-t from-lime-500/10 to-transparent pointer-events-none" />
-                        <ResponsiveContainer width="100%" height="100%">
-                            <AreaChart data={googleChartData.length > 0 ? googleChartData : [{ val: 0 }]}>
-                                <defs>
-                                    <linearGradient id="colorGoogle" x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="5%" stopColor="#84CC16" stopOpacity={0.4} />
-                                        <stop offset="95%" stopColor="#84CC16" stopOpacity={0} />
-                                    </linearGradient>
-                                </defs>
-                                <Area type="monotone" dataKey="val" stroke="#84CC16" strokeWidth={3} fill="url(#colorGoogle)" />
-                            </AreaChart>
-                        </ResponsiveContainer>
+                        <div className="h-24 -mx-6 -mb-6 relative">
+                            <div className="absolute inset-0 bg-gradient-to-t from-lime-500/10 to-transparent pointer-events-none" />
+                            <ResponsiveContainer width="100%" height="100%">
+                                <AreaChart data={googleChartData.length > 0 ? googleChartData : [{ val: 0 }]}>
+                                    <defs>
+                                        <linearGradient id="colorGoogle" x1="0" y1="0" x2="0" y2="1">
+                                            <stop offset="5%" stopColor="#84CC16" stopOpacity={0.4} />
+                                            <stop offset="95%" stopColor="#84CC16" stopOpacity={0} />
+                                        </linearGradient>
+                                    </defs>
+                                    <Area type="monotone" dataKey="val" stroke="#84CC16" strokeWidth={3} fill="url(#colorGoogle)" />
+                                </AreaChart>
+                            </ResponsiveContainer>
+                        </div>
                     </div>
-                </div>
+                )}
 
                 {/* Leads Card */}
                 <div className="glass-card rounded-[2rem] p-6 relative overflow-hidden group h-[26rem] flex flex-col justify-between">
@@ -261,19 +268,23 @@ export function Dashboard() {
                         <div>
                             <p className="text-gray-400 text-sm">Investimento Total</p>
                             <p className="text-2xl font-bold text-white">
-                                {isLoading ? '...' : formatCurrency(metaTotal + googleTotal)}
+                                {isLoading ? '...' : formatCurrency((activeMeta ? metaTotal : 0) + (activeGoogle ? googleTotal : 0))}
                             </p>
                         </div>
                     </div>
                     <div className="flex gap-4">
-                        <div className="flex-1 bg-cyan-500/10 rounded-xl p-4 border border-cyan-500/20">
-                            <p className="text-cyan-400 text-xs font-medium">Meta</p>
-                            <p className="text-white font-bold">{formatCurrency(metaTotal)}</p>
-                        </div>
-                        <div className="flex-1 bg-lime-500/10 rounded-xl p-4 border border-lime-500/20">
-                            <p className="text-lime-400 text-xs font-medium">Google</p>
-                            <p className="text-white font-bold">{formatCurrency(googleTotal)}</p>
-                        </div>
+                        {activeMeta && (
+                            <div className="flex-1 bg-cyan-500/10 rounded-xl p-4 border border-cyan-500/20">
+                                <p className="text-cyan-400 text-xs font-medium">Meta</p>
+                                <p className="text-white font-bold">{formatCurrency(metaTotal)}</p>
+                            </div>
+                        )}
+                        {activeGoogle && (
+                            <div className="flex-1 bg-lime-500/10 rounded-xl p-4 border border-lime-500/20">
+                                <p className="text-lime-400 text-xs font-medium">Google</p>
+                                <p className="text-white font-bold">{formatCurrency(googleTotal)}</p>
+                            </div>
+                        )}
                     </div>
                 </div>
 

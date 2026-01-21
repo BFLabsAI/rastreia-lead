@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Routes, Route, useLocation, useNavigate } from 'react-router-dom';
 import { Layout } from './components/Layout';
 import { Dashboard } from './pages/Dashboard';
@@ -9,18 +9,52 @@ import { GoogleDetail } from './pages/GoogleDetail';
 import { ClientSelection } from './pages/ClientSelection';
 import { CreateClient } from './pages/CreateClient';
 import { EditClient } from './pages/EditClient';
+import { Phrases } from './pages/Phrases';
+import { WhatsappConnection } from './pages/WhatsappConnection';
+import { WhatsApp } from './pages/WhatsApp';
+import { UsersManagement } from './pages/UsersManagement';
 import { NewLeadModal } from './components/NewLeadModal';
 import { Toaster, toast } from 'sonner';
+import { Loader2 } from 'lucide-react';
 
 import { supabase } from './lib/supabase';
 import { ClientProvider, useClient } from './contexts/ClientContext';
 import { DateProvider } from './contexts/DateContext';
+
+import { Login } from './pages/Login';
+import { useAuthStore } from './store/authStore';
 
 function AppContent() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { selectedClient } = useClient();
   const location = useLocation();
   const navigate = useNavigate();
+
+  // Custom Auth Check
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const checkSession = useAuthStore((state) => state.checkSession);
+  const isLoadingAuth = useAuthStore((state) => state.isLoading);
+
+  useEffect(() => {
+    checkSession();
+  }, []);
+
+  if (isLoadingAuth) {
+    return (
+      <div className="min-h-screen bg-[#050505] flex items-center justify-center">
+        <Loader2 className="animate-spin text-indigo-500 w-8 h-8" />
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <>
+        <Login />
+        <Toaster theme="dark" position="top-right" />
+      </>
+    );
+  }
 
   const handleNewLead = () => {
     setIsModalOpen(true);
@@ -70,8 +104,22 @@ function AppContent() {
           <Route path="/leads" element={<Leads />} />
           <Route path="/meta" element={<MetaDetail />} />
           <Route path="/google" element={<GoogleDetail />} />
-          <Route path="/clients/new" element={<CreateClient />} />
-          <Route path="/clients/edit" element={<EditClient />} />
+
+          {/* Admin & Super Admin Routes */}
+          {isAuthenticated && (useAuthStore.getState().user?.role === 'admin' || useAuthStore.getState().user?.role === 'super_admin') && (
+            <>
+              <Route path="/clients/new" element={<CreateClient />} />
+              <Route path="/clients/edit" element={<EditClient />} />
+              <Route path="/whatsapp-connection" element={<WhatsappConnection />} />
+              <Route path="/whatsapp" element={<WhatsApp />} />
+              <Route path="/phrases" element={<Phrases />} />
+            </>
+          )}
+
+          {/* Super Admin Only Route */}
+          {isAuthenticated && useAuthStore.getState().user?.role === 'super_admin' && (
+            <Route path="/users" element={<UsersManagement />} />
+          )}
           <Route path="*" element={<Dashboard />} />
         </Routes>
       </Layout>
