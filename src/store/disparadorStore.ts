@@ -9,6 +9,7 @@ export interface Instance {
     status: 'disconnected' | 'connecting' | 'connected';
     qrcode?: string;
     client_id?: string;
+    share_token?: string;
 }
 
 interface DisparadorState {
@@ -23,6 +24,7 @@ interface DisparadorState {
     getQrCode: (name: string) => Promise<{ qrcode: string; qrcode_generated_at?: string } | null>;
     getConnectionStatus: (name: string) => Promise<any>;
     subscribeToInstances: (clientId: string) => void;
+    generateShareToken: (instanceId: string) => Promise<string | null>;
 }
 
 export const useDisparadorStore = create<DisparadorState>((set, get) => ({
@@ -184,5 +186,33 @@ export const useDisparadorStore = create<DisparadorState>((set, get) => ({
             .subscribe((status) => {
                 console.log(`[Store] Subscription status for ${channelName}:`, status);
             });
+    },
+
+    generateShareToken: async (instanceId: string) => {
+        try {
+            const token = crypto.randomUUID();
+            const { error } = await supabase
+                .from('instances_clientes_bf_labs')
+                .update({
+                    share_token: token,
+                    share_token_created_at: new Date().toISOString()
+                })
+                .eq('id', instanceId);
+
+            if (error) throw error;
+
+            // Update local state
+            set(state => ({
+                instances: state.instances.map(i =>
+                    i.id === instanceId ? { ...i, share_token: token } : i
+                )
+            }));
+
+            return token;
+        } catch (error) {
+            console.error('Error generating share token:', error);
+            toast.error('Erro ao gerar link de compartilhamento');
+            return null;
+        }
     }
 }));

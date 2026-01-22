@@ -13,6 +13,7 @@ import { Phrases } from './pages/Phrases';
 import { WhatsappConnection } from './pages/WhatsappConnection';
 import { WhatsApp } from './pages/WhatsApp';
 import { UsersManagement } from './pages/UsersManagement';
+import { InstanceConnection } from './pages/InstanceConnection';
 import { NewLeadModal } from './components/NewLeadModal';
 import { Toaster, toast } from 'sonner';
 import { Loader2 } from 'lucide-react';
@@ -38,6 +39,15 @@ function AppContent() {
   useEffect(() => {
     checkSession();
   }, []);
+
+  // Public Routes (Bypass Auth)
+  if (location.pathname.startsWith('/connect/')) {
+    return (
+      <Routes>
+        <Route path="/connect/:token" element={<InstanceConnection />} />
+      </Routes>
+    );
+  }
 
   if (isLoadingAuth) {
     return (

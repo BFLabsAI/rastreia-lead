@@ -10,10 +10,13 @@ interface Campaign {
     name: string;
     spend: number;
     impressions: number;
+    reach: number;
     clicks: number;
     videoViews: number;
     engagements: number;
     conversations: number;
+    ctr: number;
+    cpm: number;
     isExpanded?: boolean;
     adsets?: AdSet[];
 }
@@ -23,8 +26,12 @@ interface AdSet {
     name: string;
     spend: number;
     impressions: number;
+    reach: number;
     clicks: number;
     videoViews: number;
+    conversations: number;
+    ctr: number;
+    cpm: number;
     isExpanded?: boolean;
     ads?: Ad[];
 }
@@ -34,9 +41,12 @@ interface Ad {
     name: string;
     spend: number;
     impressions: number;
+    reach: number;
     clicks: number;
     videoViews: number;
+    conversations: number;
     ctr: number;
+    cpm: number;
 }
 
 export function MetaDetail() {
@@ -61,7 +71,7 @@ export function MetaDetail() {
                 // Get facts grouped by campaign
                 const { data: facts, error } = await supabase
                     .from('relatorio_meta_fact_ad_daily')
-                    .select('campaign_id, spend, impressions, clicks, video_views, post_engagements, messaging_conversations')
+                    .select('campaign_id, spend, impressions, reach, clicks, video_views, post_engagements, messaging_conversations')
                     .eq('cliente_id', selectedClient.id)
                     .gte('date', startDateStr)
                     .lte('date', endDateStr);
@@ -71,9 +81,10 @@ export function MetaDetail() {
                 // Aggregate by campaign
                 const byCampaign = (facts || []).reduce((acc: any, row) => {
                     const cid = row.campaign_id;
-                    if (!acc[cid]) acc[cid] = { spend: 0, imp: 0, clicks: 0, video: 0, eng: 0, conv: 0 };
+                    if (!acc[cid]) acc[cid] = { spend: 0, imp: 0, reach: 0, clicks: 0, video: 0, eng: 0, conv: 0 };
                     acc[cid].spend += Number(row.spend) || 0;
                     acc[cid].imp += Number(row.impressions) || 0;
+                    acc[cid].reach += Number(row.reach) || 0;
                     acc[cid].clicks += Number(row.clicks) || 0;
                     acc[cid].video += Number(row.video_views) || 0;
                     acc[cid].eng += Number(row.post_engagements) || 0;
@@ -101,10 +112,13 @@ export function MetaDetail() {
                         name: dim.campaign_name,
                         spend: stats.spend,
                         impressions: stats.imp,
+                        reach: stats.reach,
                         clicks: stats.clicks,
                         videoViews: stats.video,
                         engagements: stats.eng,
                         conversations: stats.conv,
+                        ctr: stats.imp > 0 ? (stats.clicks / stats.imp) * 100 : 0,
+                        cpm: stats.imp > 0 ? (stats.spend / stats.imp) * 1000 : 0,
                         isExpanded: false,
                         adsets: []
                     };
@@ -148,31 +162,40 @@ export function MetaDetail() {
 
                     const { data: facts } = await supabase
                         .from('relatorio_meta_fact_ad_daily')
-                        .select('adset_id, spend, impressions, clicks, video_views')
+                        .select('adset_id, spend, impressions, reach, clicks, video_views, messaging_conversations')
                         .in('adset_id', adsetIds)
                         .gte('date', startDateStr)
                         .lte('date', endDateStr);
 
                     const byAdset = (facts || []).reduce((acc: any, row) => {
                         const aid = row.adset_id;
-                        if (!acc[aid]) acc[aid] = { spend: 0, imp: 0, clicks: 0, video: 0 };
+                        if (!acc[aid]) acc[aid] = { spend: 0, imp: 0, reach: 0, clicks: 0, video: 0, conv: 0 };
                         acc[aid].spend += Number(row.spend) || 0;
                         acc[aid].imp += Number(row.impressions) || 0;
+                        acc[aid].reach += Number(row.reach) || 0;
                         acc[aid].clicks += Number(row.clicks) || 0;
                         acc[aid].video += Number(row.video_views) || 0;
+                        acc[aid].conv += Number(row.messaging_conversations) || 0;
                         return acc;
                     }, {});
 
-                    const adsets: AdSet[] = adsetDims.map(dim => ({
-                        id: dim.id,
-                        name: dim.adset_name,
-                        spend: byAdset[dim.id]?.spend || 0,
-                        impressions: byAdset[dim.id]?.imp || 0,
-                        clicks: byAdset[dim.id]?.clicks || 0,
-                        videoViews: byAdset[dim.id]?.video || 0,
-                        isExpanded: false,
-                        ads: []
-                    })).filter(a => a.spend > 0).sort((a, b) => b.spend - a.spend);
+                    const adsets: AdSet[] = adsetDims.map(dim => {
+                        const stats = byAdset[dim.id] || { spend: 0, imp: 0, reach: 0, clicks: 0, video: 0, conv: 0 };
+                        return {
+                            id: dim.id,
+                            name: dim.adset_name,
+                            spend: stats.spend,
+                            impressions: stats.imp,
+                            reach: stats.reach,
+                            clicks: stats.clicks,
+                            videoViews: stats.video,
+                            conversations: stats.conv,
+                            ctr: stats.imp > 0 ? (stats.clicks / stats.imp) * 100 : 0,
+                            cpm: stats.imp > 0 ? (stats.spend / stats.imp) * 1000 : 0,
+                            isExpanded: false,
+                            ads: []
+                        };
+                    }).filter(a => a.spend > 0).sort((a, b) => b.spend - a.spend);
 
                     setCampaigns(prev => prev.map(c =>
                         c.id === campaignId ? { ...c, isExpanded: true, adsets } : c
@@ -220,32 +243,41 @@ export function MetaDetail() {
 
                     const { data: facts } = await supabase
                         .from('relatorio_meta_fact_ad_daily')
-                        .select('ad_id, spend, impressions, clicks, video_views, ctr')
+                        .select('ad_id, spend, impressions, reach, clicks, video_views, ctr, messaging_conversations')
                         .in('ad_id', adIds)
                         .gte('date', startDateStr)
                         .lte('date', endDateStr);
 
                     const byAd = (facts || []).reduce((acc: any, row) => {
                         const aid = row.ad_id;
-                        if (!acc[aid]) acc[aid] = { spend: 0, imp: 0, clicks: 0, video: 0, ctrSum: 0, count: 0 };
+                        if (!acc[aid]) acc[aid] = { spend: 0, imp: 0, reach: 0, clicks: 0, video: 0, ctrSum: 0, count: 0, conv: 0 };
                         acc[aid].spend += Number(row.spend) || 0;
                         acc[aid].imp += Number(row.impressions) || 0;
+                        acc[aid].reach += Number(row.reach) || 0;
                         acc[aid].clicks += Number(row.clicks) || 0;
                         acc[aid].video += Number(row.video_views) || 0;
                         acc[aid].ctrSum += Number(row.ctr) || 0;
+                        acc[aid].conv += Number(row.messaging_conversations) || 0;
                         acc[aid].count++;
                         return acc;
                     }, {});
 
-                    const ads: Ad[] = adDims.map(dim => ({
-                        id: dim.id,
-                        name: dim.ad_name,
-                        spend: byAd[dim.id]?.spend || 0,
-                        impressions: byAd[dim.id]?.imp || 0,
-                        clicks: byAd[dim.id]?.clicks || 0,
-                        videoViews: byAd[dim.id]?.video || 0,
-                        ctr: byAd[dim.id]?.count > 0 ? byAd[dim.id].ctrSum / byAd[dim.id].count : 0
-                    })).filter(a => a.spend > 0).sort((a, b) => b.spend - a.spend);
+                    const ads: Ad[] = adDims.map(dim => {
+                        const stats = byAd[dim.id] || { spend: 0, imp: 0, reach: 0, clicks: 0, video: 0, ctrSum: 0, count: 0, conv: 0 };
+                        const imp = stats.imp;
+                        return {
+                            id: dim.id,
+                            name: dim.ad_name,
+                            spend: stats.spend,
+                            impressions: stats.imp,
+                            reach: stats.reach,
+                            clicks: stats.clicks,
+                            videoViews: stats.video,
+                            conversations: stats.conv,
+                            ctr: stats.count > 0 ? stats.ctrSum / stats.count : 0,
+                            cpm: imp > 0 ? (stats.spend / imp) * 1000 : 0
+                        };
+                    }).filter(a => a.spend > 0).sort((a, b) => b.spend - a.spend);
 
                     setCampaigns(prev => prev.map(c =>
                         c.id === campaignId ? {
@@ -373,10 +405,13 @@ export function MetaDetail() {
                                     <div className="flex-1">
                                         <p className="text-white font-bold">{camp.name}</p>
                                     </div>
-                                    <div className="flex gap-8 text-right">
-                                        <div><p className="text-xs text-gray-500">Gasto</p><p className="text-cyan-400 font-mono font-bold">{formatCurrency(camp.spend)}</p></div>
-                                        <div><p className="text-xs text-gray-500">Cliques</p><p className="text-gray-300 font-mono">{camp.clicks}</p></div>
-                                        <div><p className="text-xs text-gray-500">Conversas</p><p className="text-green-400 font-mono">{camp.conversations}</p></div>
+                                    <div className="flex gap-6 text-right overflow-x-auto no-scrollbar">
+                                        <div className="min-w-[80px]"><p className="text-[10px] text-gray-500 uppercase">Gasto</p><p className="text-cyan-400 font-mono font-bold text-sm">{formatCurrency(camp.spend)}</p></div>
+                                        <div className="min-w-[80px]"><p className="text-[10px] text-gray-500 uppercase">Impr.</p><p className="text-gray-300 font-mono text-sm">{formatNumber(camp.impressions)}</p></div>
+                                        <div className="min-w-[60px]"><p className="text-[10px] text-gray-500 uppercase">Clicks</p><p className="text-gray-300 font-mono text-sm">{camp.clicks}</p></div>
+                                        <div className="min-w-[60px]"><p className="text-[10px] text-gray-500 uppercase">CTR</p><p className="text-orange-400 font-mono text-sm">{camp.ctr.toFixed(2)}%</p></div>
+                                        <div className="min-w-[70px]"><p className="text-[10px] text-gray-500 uppercase">CPM</p><p className="text-purple-400 font-mono text-sm">R$ {camp.cpm.toFixed(2)}</p></div>
+                                        <div className="min-w-[70px]"><p className="text-[10px] text-gray-500 uppercase">Conv.</p><p className="text-green-400 font-mono text-sm">{camp.conversations}</p></div>
                                     </div>
                                 </div>
 
@@ -396,9 +431,13 @@ export function MetaDetail() {
                                                         )}
                                                     </div>
                                                     <div className="flex-1"><p className="text-gray-300 text-sm font-medium">{adset.name}</p></div>
-                                                    <div className="flex gap-6 text-right">
-                                                        <div><p className="text-xs text-gray-600">Gasto</p><p className="text-cyan-400/80 font-mono text-sm">{formatCurrency(adset.spend)}</p></div>
-                                                        <div><p className="text-xs text-gray-600">Cliques</p><p className="text-gray-400 font-mono text-sm">{adset.clicks}</p></div>
+                                                    <div className="flex gap-5 text-right overflow-x-auto no-scrollbar">
+                                                        <div className="min-w-[70px]"><p className="text-[10px] text-gray-600 uppercase">Gasto</p><p className="text-cyan-400/80 font-mono text-xs">{formatCurrency(adset.spend)}</p></div>
+                                                        <div className="min-w-[70px]"><p className="text-[10px] text-gray-600 uppercase">Impr.</p><p className="text-gray-400 font-mono text-xs">{formatNumber(adset.impressions)}</p></div>
+                                                        <div className="min-w-[50px]"><p className="text-[10px] text-gray-600 uppercase">Clicks</p><p className="text-gray-400 font-mono text-xs">{adset.clicks}</p></div>
+                                                        <div className="min-w-[50px]"><p className="text-[10px] text-gray-600 uppercase">CTR</p><p className="text-orange-400/80 font-mono text-xs">{adset.ctr.toFixed(2)}%</p></div>
+                                                        <div className="min-w-[60px]"><p className="text-[10px] text-gray-600 uppercase">CPM</p><p className="text-purple-400/80 font-mono text-xs">R${adset.cpm.toFixed(2)}</p></div>
+                                                        <div className="min-w-[60px]"><p className="text-[10px] text-gray-600 uppercase">Conv.</p><p className="text-green-400/80 font-mono text-xs">{adset.conversations}</p></div>
                                                     </div>
                                                 </div>
 
@@ -407,11 +446,14 @@ export function MetaDetail() {
                                                     <div className="bg-white/[0.01] border-l-2 border-blue-500/20 ml-10 py-2">
                                                         {adset.ads.map(ad => (
                                                             <div key={ad.id} className="px-6 py-2 flex items-center gap-4">
-                                                                <p className="flex-1 text-gray-400 text-xs">{ad.name}</p>
-                                                                <div className="flex gap-4">
-                                                                    <span className="text-cyan-400/70 text-xs font-mono">{formatCurrency(ad.spend)}</span>
-                                                                    <span className="text-gray-500 text-xs font-mono">{ad.clicks} cliques</span>
-                                                                    <span className="text-gray-500 text-xs font-mono">{ad.ctr.toFixed(2)}% CTR</span>
+                                                                <p className="flex-1 text-gray-400 text-xs truncate">{ad.name}</p>
+                                                                <div className="flex gap-4 text-right">
+                                                                    <div className="min-w-[60px]"><p className="text-[9px] text-gray-600 uppercase">Gasto</p><p className="text-cyan-400/60 font-mono text-[10px]">{formatCurrency(ad.spend)}</p></div>
+                                                                    <div className="min-w-[60px]"><p className="text-[9px] text-gray-600 uppercase">Impr.</p><p className="text-gray-500 font-mono text-[10px]">{formatNumber(ad.impressions)}</p></div>
+                                                                    <div className="min-w-[40px]"><p className="text-[9px] text-gray-600 uppercase">Clicks</p><p className="text-gray-500 font-mono text-[10px]">{ad.clicks}</p></div>
+                                                                    <div className="min-w-[40px]"><p className="text-[9px] text-gray-600 uppercase">CTR</p><p className="text-orange-400/60 font-mono text-[10px]">{ad.ctr.toFixed(2)}%</p></div>
+                                                                    <div className="min-w-[50px]"><p className="text-[9px] text-gray-600 uppercase">CPM</p><p className="text-purple-400/60 font-mono text-[10px]">R${ad.cpm.toFixed(2)}</p></div>
+                                                                    <div className="min-w-[50px]"><p className="text-[9px] text-gray-600 uppercase">Conv.</p><p className="text-green-400/60 font-mono text-[10px]">{ad.conversations}</p></div>
                                                                 </div>
                                                             </div>
                                                         ))}

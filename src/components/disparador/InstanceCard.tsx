@@ -4,7 +4,7 @@ import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/componen
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
-import { Wifi, WifiOff, RefreshCw, Trash2, LogOut } from 'lucide-react';
+import { Wifi, WifiOff, RefreshCw, Trash2, LogOut, Link as LinkIcon, Check } from 'lucide-react';
 import { useState } from 'react';
 import { QrDialog } from './QrDialog';
 
@@ -13,8 +13,9 @@ interface InstanceCardProps {
 }
 
 export function InstanceCard({ instance }: InstanceCardProps) {
-    const { disconnectInstance, deleteInstance, getConnectionStatus } = useDisparadorStore();
+    const { disconnectInstance, deleteInstance, getConnectionStatus, generateShareToken } = useDisparadorStore();
     const [showQr, setShowQr] = useState(false);
+    const [justCopied, setJustCopied] = useState(false);
 
     const handleConnect = async () => {
         // Open dialog -> Trigger QR fetch
@@ -30,6 +31,22 @@ export function InstanceCard({ instance }: InstanceCardProps) {
     const handleDelete = async () => {
         if (confirm('ATENÇÃO: Isso excluirá permanentemente a instância. Continuar?')) {
             await deleteInstance(instance.instance_name);
+        }
+    };
+
+    const handleShare = async () => {
+        let token = instance.share_token;
+        if (!token) {
+            token = await generateShareToken(instance.id) || undefined;
+        }
+
+        if (token) {
+            const url = `${window.location.origin}/connect/${token}`;
+            navigator.clipboard.writeText(url);
+            toast.success('Link copiado para a área de transferência!');
+
+            setJustCopied(true);
+            setTimeout(() => setJustCopied(false), 2000);
         }
     };
 
@@ -99,6 +116,9 @@ export function InstanceCard({ instance }: InstanceCardProps) {
                     )}
                 </CardContent>
                 <CardFooter className="flex justify-end gap-2 pt-2">
+                    <Button variant="ghost" size="icon" onClick={handleShare} className="text-gray-500 hover:text-white hover:bg-white/10" title="Copiar Link de Conexão Rápida">
+                        {justCopied ? <Check className="h-4 w-4 text-green-400" /> : <LinkIcon className="h-4 w-4" />}
+                    </Button>
                     {instance.status !== 'connected' && (
                         <Button variant="outline" size="sm" onClick={handleConnect} className="bg-transparent border-indigo-500/30 text-indigo-400 hover:bg-indigo-500/10 hover:text-indigo-300">
                             <RefreshCw className="mr-2 h-4 w-4" />

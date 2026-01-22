@@ -30,6 +30,7 @@ interface Lead {
     source_url?: string;
     conversion_source?: string;
     ctwa_clid?: string;
+    lead_status?: string;
 }
 
 export function LeadsReport() {
@@ -81,7 +82,13 @@ export function LeadsReport() {
 
         const total = leads.length;
         const bySource: Record<string, number> = {};
-        const timeline: Record<string, { trafego: number, organico: number, date: string }> = {};
+        const byStatus: Record<string, number> = {
+            'Novo': 0,
+            'Conectado': 0,
+            'Engajado': 0,
+            'SuperEngajado': 0
+        };
+        const timeline: Record<string, { Novo: number, Conectado: number, Engajado: number, SuperEngajado: number, date: string }> = {};
 
         // Top Ads Calculation
         const adsCount: Record<string, number> = {};
@@ -166,11 +173,21 @@ export function LeadsReport() {
 
             const dateKey = format(parseISO(lead.created_at), 'dd/MM');
             if (!timeline[dateKey]) {
-                timeline[dateKey] = { trafego: 0, organico: 0, date: dateKey };
+                timeline[dateKey] = { Novo: 0, Conectado: 0, Engajado: 0, SuperEngajado: 0, date: dateKey };
             }
 
-            if (source === 'Tráfego') timeline[dateKey].trafego++;
-            else timeline[dateKey].organico++;
+            // Count by status
+            const status = lead.lead_status || 'Novo';
+            byStatus[status] = (byStatus[status] || 0) + 1;
+
+            // Add to timeline
+            // Ensure status key exists in timeline object to avoid runtime errors if status is unexpected
+            if (Object.prototype.hasOwnProperty.call(timeline[dateKey], status)) {
+                (timeline[dateKey] as any)[status]++;
+            } else {
+                // Fallback for unexpected status, count as Novo or handle gracefully
+                timeline[dateKey]['Novo']++;
+            }
         });
 
         const pieData = Object.entries(bySource).map(([name, value]) => ({
@@ -188,7 +205,7 @@ export function LeadsReport() {
             .slice(0, 2)
             .map(([url, count]) => ({ url, count }));
 
-        return { total, pieData, timelineData, topAds };
+        return { total, pieData, timelineData, topAds, byStatus };
 
     }, [leads]);
 
@@ -272,32 +289,67 @@ export function LeadsReport() {
             {/* Charts Row */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
-                {/* Timeline Chart */}
-                <div className="glass-card p-8 rounded-[2rem]">
-                    <h3 className="text-lg font-bold text-white mb-6 flex items-center gap-3">
-                        <div className="w-2 h-8 bg-gradient-to-b from-purple-400 to-pink-500 rounded-full" />
-                        Leads ao Longo do Tempo
+                {/* Engagement Status Funnel - SVG version for perfect alignment */}
+                <div className="glass-card p-10 rounded-[2rem]">
+                    <h3 className="text-xl font-bold text-white mb-8 flex items-center gap-3">
+                        <div className="w-2 h-10 bg-gradient-to-b from-gray-400 to-amber-500 rounded-full" />
+                        Funil de Engajamento
                     </h3>
-                    <div className="h-64">
-                        <ResponsiveContainer width="100%" height="100%">
-                            <AreaChart data={metrics.timelineData}>
-                                <defs>
-                                    <linearGradient id="trafego" x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="5%" stopColor="#E1306C" stopOpacity={0.4} />
-                                        <stop offset="95%" stopColor="#E1306C" stopOpacity={0} />
-                                    </linearGradient>
-                                    <linearGradient id="organico" x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="5%" stopColor="#10B981" stopOpacity={0.4} />
-                                        <stop offset="95%" stopColor="#10B981" stopOpacity={0} />
-                                    </linearGradient>
-                                </defs>
-                                <XAxis dataKey="date" stroke="#6B7280" style={{ fontSize: '12px' }} />
-                                <YAxis stroke="#6B7280" style={{ fontSize: '12px' }} />
-                                <Tooltip contentStyle={{ backgroundColor: '#1F2937', border: '1px solid #374151', borderRadius: '12px' }} />
-                                <Area type="monotone" dataKey="trafego" stroke="#E1306C" strokeWidth={2} fill="url(#trafego)" name="Tráfego" />
-                                <Area type="monotone" dataKey="organico" stroke="#10B981" strokeWidth={2} fill="url(#organico)" name="Orgânico" />
-                            </AreaChart>
-                        </ResponsiveContainer>
+
+                    <div className="relative max-w-lg mx-auto aspect-[16/9]">
+                        <svg viewBox="0 0 520 320" className="w-full h-full drop-shadow-2xl">
+                            {/* Novo */}
+                            <g className="group cursor-pointer">
+                                <polygon
+                                    points="0,0 400,0 360,80 40,80"
+                                    className="fill-gray-500/20 stroke-gray-500/30 transition-all group-hover:fill-gray-500/30"
+                                />
+                                <text x="200" y="45" textAnchor="middle" className="fill-white font-bold text-2xl">
+                                    {metrics.byStatus['Novo'] || 0}
+                                </text>
+                                <text x="420" y="45" className="fill-gray-400 text-sm font-medium">Novo</text>
+                                <line x1="380" y1="40" x2="410" y2="40" className="stroke-gray-500/30" />
+                            </g>
+
+                            {/* Conectado */}
+                            <g className="group cursor-pointer">
+                                <polygon
+                                    points="40,80 360,80 320,160 80,160"
+                                    className="fill-blue-500/20 stroke-blue-500/30 transition-all group-hover:fill-blue-500/30"
+                                />
+                                <text x="200" y="125" textAnchor="middle" className="fill-blue-400 font-bold text-2xl">
+                                    {metrics.byStatus['Conectado'] || 0}
+                                </text>
+                                <text x="420" y="125" className="fill-blue-400 text-sm font-medium">Conectado</text>
+                                <line x1="340" y1="120" x2="410" y2="120" className="stroke-blue-500/30" />
+                            </g>
+
+                            {/* Engajado */}
+                            <g className="group cursor-pointer">
+                                <polygon
+                                    points="80,160 320,160 280,240 120,240"
+                                    className="fill-emerald-500/20 stroke-emerald-500/30 transition-all group-hover:fill-emerald-500/30"
+                                />
+                                <text x="200" y="205" textAnchor="middle" className="fill-emerald-400 font-bold text-2xl">
+                                    {metrics.byStatus['Engajado'] || 0}
+                                </text>
+                                <text x="420" y="205" className="fill-emerald-400 text-sm font-medium">Engajado</text>
+                                <line x1="300" y1="200" x2="410" y2="200" className="stroke-emerald-500/30" />
+                            </g>
+
+                            {/* Super Engajado */}
+                            <g className="group cursor-pointer">
+                                <polygon
+                                    points="120,240 280,240 240,320 160,320"
+                                    className="fill-amber-500/20 stroke-amber-500/30 transition-all group-hover:fill-amber-500/30"
+                                />
+                                <text x="200" y="285" textAnchor="middle" className="fill-amber-400 font-bold text-2xl">
+                                    {metrics.byStatus['SuperEngajado'] || 0}
+                                </text>
+                                <text x="420" y="285" className="fill-amber-400 text-sm font-medium">Super Engajado</text>
+                                <line x1="260" y1="280" x2="410" y2="280" className="stroke-amber-500/30" />
+                            </g>
+                        </svg>
                     </div>
                 </div>
 
@@ -336,6 +388,45 @@ export function LeadsReport() {
                             </div>
                         ))}
                     </div>
+                </div>
+            </div>
+
+            {/* Timeline Chart - Bottom and full width */}
+            <div className="glass-card p-8 rounded-[2rem]">
+                <h3 className="text-lg font-bold text-white mb-6 flex items-center gap-3">
+                    <div className="w-2 h-8 bg-gradient-to-b from-purple-400 to-pink-500 rounded-full" />
+                    Leads ao Longo do Tempo
+                </h3>
+                <div className="h-72">
+                    <ResponsiveContainer width="100%" height="100%">
+                        <AreaChart data={metrics.timelineData}>
+                            <defs>
+                                <linearGradient id="Novo" x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="5%" stopColor="#9CA3AF" stopOpacity={0.4} />
+                                    <stop offset="95%" stopColor="#9CA3AF" stopOpacity={0} />
+                                </linearGradient>
+                                <linearGradient id="Conectado" x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.4} />
+                                    <stop offset="95%" stopColor="#3B82F6" stopOpacity={0} />
+                                </linearGradient>
+                                <linearGradient id="Engajado" x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="5%" stopColor="#10B981" stopOpacity={0.4} />
+                                    <stop offset="95%" stopColor="#10B981" stopOpacity={0} />
+                                </linearGradient>
+                                <linearGradient id="SuperEngajado" x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="5%" stopColor="#F59E0B" stopOpacity={0.4} />
+                                    <stop offset="95%" stopColor="#F59E0B" stopOpacity={0} />
+                                </linearGradient>
+                            </defs>
+                            <XAxis dataKey="date" stroke="#6B7280" style={{ fontSize: '12px' }} />
+                            <YAxis stroke="#6B7280" style={{ fontSize: '12px' }} />
+                            <Tooltip contentStyle={{ backgroundColor: '#1F2937', border: '1px solid #374151', borderRadius: '12px' }} />
+                            <Area type="monotone" dataKey="Novo" stackId="1" stroke="#9CA3AF" strokeWidth={2} fill="url(#Novo)" name="Novo" />
+                            <Area type="monotone" dataKey="Conectado" stackId="1" stroke="#3B82F6" strokeWidth={2} fill="url(#Conectado)" name="Conectado" />
+                            <Area type="monotone" dataKey="Engajado" stackId="1" stroke="#10B981" strokeWidth={2} fill="url(#Engajado)" name="Engajado" />
+                            <Area type="monotone" dataKey="SuperEngajado" stackId="1" stroke="#F59E0B" strokeWidth={2} fill="url(#SuperEngajado)" name="Super Engajado" />
+                        </AreaChart>
+                    </ResponsiveContainer>
                 </div>
             </div>
 
