@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo } from 'react';
-import { BarChart3, TrendingUp, Users } from 'lucide-react';
+import { BarChart3, TrendingUp, Users, Info, ChevronDown, ChevronUp } from 'lucide-react';
 import { AreaChart, Area, PieChart, Pie, Cell, ResponsiveContainer, XAxis, YAxis, Tooltip } from 'recharts';
 import { useDateRange } from '../contexts/DateContext';
 import { useClient } from '../contexts/ClientContext';
@@ -36,8 +36,10 @@ interface Lead {
 export function LeadsReport() {
     const { selectedClient } = useClient();
     const { dateRange } = useDateRange();
+
     const [leads, setLeads] = useState<Lead[]>([]);
     const [loading, setLoading] = useState(true);
+    const [showStatusInfo, setShowStatusInfo] = useState(false);
 
     useEffect(() => {
         async function fetchLeads() {
@@ -350,6 +352,63 @@ export function LeadsReport() {
                                 <line x1="260" y1="280" x2="410" y2="280" className="stroke-amber-500/30" />
                             </g>
                         </svg>
+                    </div>
+
+
+                    {/* Status Legend Dropdown */}
+                    <div className="mt-4 border-t border-white/5 pt-4">
+                        <button
+                            onClick={() => setShowStatusInfo(!showStatusInfo)}
+                            className="flex items-center gap-2 text-xs font-medium text-gray-400 hover:text-white transition-colors mx-auto"
+                        >
+                            <Info size={14} />
+                            Entenda os Status
+                            {showStatusInfo ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                        </button>
+
+                        {showStatusInfo && (
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-4 animate-in fade-in slide-in-from-top-2">
+                                <div className="bg-white/5 rounded-xl p-3 border border-white/5">
+                                    <div className="flex items-center gap-2 mb-1">
+                                        <div className="w-2 h-2 rounded-full bg-gray-500" />
+                                        <span className="text-sm font-bold text-gray-300">Novo</span>
+                                    </div>
+                                    <p className="text-xs text-gray-500 leading-relaxed">
+                                        Lead recém importado ou capturado, sem interação.
+                                    </p>
+                                </div>
+
+                                <div className="bg-white/5 rounded-xl p-3 border border-white/5">
+                                    <div className="flex items-center gap-2 mb-1">
+                                        <div className="w-2 h-2 rounded-full bg-blue-500" />
+                                        <span className="text-sm font-bold text-blue-400">Conectado</span>
+                                    </div>
+                                    <p className="text-xs text-gray-500 leading-relaxed">
+                                        Lead respondeu à ativação inicial do vendedor.
+                                    </p>
+                                </div>
+
+                                <div className="bg-white/5 rounded-xl p-3 border border-white/5">
+                                    <div className="flex items-center gap-2 mb-1">
+                                        <div className="w-2 h-2 rounded-full bg-emerald-500" />
+                                        <span className="text-sm font-bold text-emerald-400">Engajado</span>
+                                    </div>
+                                    <p className="text-xs text-gray-500 leading-relaxed">
+                                        Lead com 4 ou mais janelas de conexão (trocas de mensagens).
+                                    </p>
+                                </div>
+
+                                <div className="bg-white/5 rounded-xl p-3 border border-white/5">
+                                    <div className="flex items-center gap-2 mb-1">
+                                        <div className="w-2 h-2 rounded-full bg-amber-500" />
+                                        <span className="text-sm font-bold text-amber-400">Super Engajado</span>
+                                    </div>
+                                    <p className="text-xs text-gray-500 leading-relaxed">
+                                        Lead com 10 ou mais janelas de conexão (alta interatividade).
+                                    </p>
+                                </div>
+                            </div>
+                        )}
                     </div>
                 </div>
 
