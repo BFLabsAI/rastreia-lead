@@ -1,4 +1,4 @@
-import { LayoutDashboard, Users, Zap, TrendingUp, LogOut, Hexagon, BarChart3, UserPlus, Settings, MessageSquare, MessageSquareQuote, QrCode, ChevronDown, Plus } from 'lucide-react';
+import { LayoutDashboard, Users, Zap, TrendingUp, LogOut, BarChart3, UserPlus, Settings, MessageSquare, MessageSquareQuote, QrCode, ChevronDown, Plus } from 'lucide-react';
 import { clsx } from 'clsx';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
@@ -35,12 +35,10 @@ export function Sidebar({ }: SidebarProps) {
 
                 {/* Logo Area */}
                 <div className="p-6 flex items-center gap-3 border-b border-white/5">
-                    <div className="p-2 bg-gradient-to-tr from-indigo-500 to-purple-500 rounded-xl shadow-lg shadow-indigo-500/20">
-                        <Hexagon className="text-white fill-white" size={20} />
-                    </div>
+                    <img src="/logo.png" alt="LeadHub Logo" className="w-10 h-10 object-contain rounded-lg" />
                     <div>
-                        <h1 className="text-xl font-bold text-white tracking-wide">BF LABS</h1>
-                        <p className="text-[10px] text-gray-400 font-medium tracking-wider uppercase">Intelligence</p>
+                        <h1 className="text-xl font-bold text-white tracking-wide">LeadHub</h1>
+                        <p className="text-[10px] text-gray-400 font-medium tracking-wider uppercase">Dashboard</p>
                     </div>
                 </div>
 

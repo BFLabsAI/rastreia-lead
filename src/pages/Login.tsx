@@ -34,9 +34,7 @@ export function Login() {
 
             <div className="w-full max-w-md relative z-10">
                 <div className="text-center mb-12">
-                    <div className="inline-flex items-center justify-center w-20 h-20 rounded-3xl bg-gradient-to-br from-indigo-500 to-purple-600 shadow-2xl shadow-indigo-500/30 mb-6 transform rotate-3 hover:rotate-6 transition-all duration-300">
-                        <Lock size={40} className="text-white" />
-                    </div>
+                    <img src="/logo.png" alt="LeadHub Logo" className="w-24 h-24 object-contain mx-auto mb-6 hover:scale-105 transition-transform duration-300 rounded-3xl shadow-2xl shadow-indigo-500/30" />
                     <h1 className="text-4xl font-bold text-white mb-2 tracking-tight">Bem-vindo</h1>
                     <p className="text-gray-400 text-lg">Faça login para acessar o painel</p>
                 </div>
@@ -97,7 +95,7 @@ export function Login() {
                 </div>
 
                 <p className="text-center text-gray-600 text-sm mt-8">
-                    © 2026 BF Labs Intelligence
+                    © 2026 LeadHub Dashboard
                 </p>
             </div>
         </div>

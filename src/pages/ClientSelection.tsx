@@ -59,12 +59,10 @@ export function ClientSelection({ onClientSelected }: ClientSelectionProps) {
                 {/* Logo & Title */}
                 <div className="text-center mb-12">
                     <div className="inline-flex items-center gap-3 mb-4">
-                        <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg shadow-indigo-500/30">
-                            <Building2 size={32} className="text-white" />
-                        </div>
+                        <img src="/logo.png" alt="LeadHub Logo" className="w-20 h-20 object-contain rounded-3xl shadow-lg shadow-indigo-500/30" />
                     </div>
-                    <h1 className="text-4xl font-bold text-white mb-2">BF LABS</h1>
-                    <p className="text-gray-400 text-lg">Intelligence Dashboard</p>
+                    <h1 className="text-4xl font-bold text-white mb-2">LeadHub</h1>
+                    <p className="text-gray-400 text-lg">Dashboard</p>
                 </div>
 
                 {/* Main Card */}
@@ -178,7 +176,7 @@ export function ClientSelection({ onClientSelected }: ClientSelectionProps) {
                 </div>
 
                 <p className="text-center text-gray-600 text-sm mt-8">
-                    © 2026 BF Labs Intelligence. Todos os direitos reservados.
+                    © 2026 LeadHub Dashboard. Todos os direitos reservados.
                 </p>
             </div>
         </div>
