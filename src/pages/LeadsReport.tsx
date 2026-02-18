@@ -217,7 +217,7 @@ export function LeadsReport() {
             {/* Page Title */}
             <div>
                 <h2 className="text-3xl font-bold text-white tracking-tight flex items-center gap-3">
-                    <BarChart3 className="text-purple-400" size={32} />
+                    <BarChart3 className="text-primary" size={32} />
                     Relatório de Leads
                 </h2>
                 <p className="text-gray-400 mt-1 text-sm">
@@ -231,7 +231,7 @@ export function LeadsReport() {
                 {/* Total Leads */}
                 <div className="glass-card rounded-[2rem] p-6">
                     <div className="flex items-center gap-3 mb-4">
-                        <div className="p-3 bg-purple-500/20 text-purple-400 rounded-2xl shadow-[0_0_15px_rgba(168,85,247,0.2)]">
+                        <div className="p-3 bg-primary/20 text-primary rounded-2xl shadow-[0_0_15px_rgba(204,255,0,0.2)]">
                             <Users size={24} />
                         </div>
                         <span className="text-xs text-gray-500 uppercase tracking-wider font-bold">Total</span>
@@ -239,7 +239,7 @@ export function LeadsReport() {
                     <p className="text-4xl font-bold text-white">
                         {loading ? '...' : metrics.total}
                     </p>
-                    <p className="text-sm text-purple-400 mt-2 flex items-center gap-1">
+                    <p className="text-sm text-primary mt-2 flex items-center gap-1">
                         <TrendingUp size={14} />
                         Performance Atual
                     </p>
@@ -273,7 +273,7 @@ export function LeadsReport() {
                                         href={ad.url}
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        className="text-indigo-400 hover:text-indigo-300 truncate max-w-[120px] underline"
+                                        className="text-primary hover:text-primary/80 truncate max-w-[120px] underline"
                                         title={ad.url}
                                     >
                                         Anúncio {i + 1}
@@ -453,7 +453,7 @@ export function LeadsReport() {
             {/* Timeline Chart - Bottom and full width */}
             <div className="glass-card p-8 rounded-[2rem]">
                 <h3 className="text-lg font-bold text-white mb-6 flex items-center gap-3">
-                    <div className="w-2 h-8 bg-gradient-to-b from-purple-400 to-pink-500 rounded-full" />
+                    <div className="w-2 h-8 bg-gradient-to-b from-primary to-secondary rounded-full" />
                     Leads ao Longo do Tempo
                 </h3>
                 <div className="h-72">

@@ -220,10 +220,10 @@ export function Dashboard() {
 
                 {/* Leads Card */}
                 <div className="glass-card rounded-[2rem] p-6 relative overflow-hidden group h-[26rem] flex flex-col justify-between">
-                    <div className="absolute inset-0 bg-gradient-to-b from-purple-500/5 to-transparent opacity-50 group-hover:opacity-100 transition-opacity duration-500" />
+                    <div className="absolute inset-0 bg-gradient-to-b from-primary/5 to-transparent opacity-50 group-hover:opacity-100 transition-opacity duration-500" />
 
                     <div className="flex flex-col items-center relative z-10 pt-4">
-                        <div className="w-14 h-14 rounded-2xl bg-[#0F172A] border border-purple-500/30 flex items-center justify-center text-purple-400 shadow-[0_0_15px_rgba(168,85,247,0.15)] mb-4">
+                        <div className="w-14 h-14 rounded-2xl bg-[#0F172A] border border-primary/30 flex items-center justify-center text-primary shadow-[0_0_15px_rgba(204,255,0,0.15)] mb-4">
                             <Users size={28} />
                         </div>
                         <span className="text-gray-400 font-medium text-sm tracking-widest uppercase">Leads</span>
@@ -235,22 +235,22 @@ export function Dashboard() {
                                 {isLoading ? '...' : leadsTotal}
                             </span>
                         </div>
-                        <p className="text-purple-400/80 text-xs mt-2 font-medium bg-purple-500/10 py-1 px-3 rounded-full inline-block border border-purple-500/20">
+                        <p className="text-primary/80 text-xs mt-2 font-medium bg-primary/10 py-1 px-3 rounded-full inline-block border border-primary/20">
                             TOTAL NO PERÍODO
                         </p>
                     </div>
 
                     <div className="h-24 -mx-6 -mb-6 relative">
-                        <div className="absolute inset-0 bg-gradient-to-t from-purple-500/10 to-transparent pointer-events-none" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-primary/10 to-transparent pointer-events-none" />
                         <ResponsiveContainer width="100%" height="100%">
                             <AreaChart data={leadsChartData.length > 0 ? leadsChartData : [{ val: 0 }]}>
                                 <defs>
                                     <linearGradient id="colorLeads" x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="5%" stopColor="#A855F7" stopOpacity={0.4} />
-                                        <stop offset="95%" stopColor="#A855F7" stopOpacity={0} />
+                                        <stop offset="5%" stopColor="#CCFF00" stopOpacity={0.4} />
+                                        <stop offset="95%" stopColor="#CCFF00" stopOpacity={0} />
                                     </linearGradient>
                                 </defs>
-                                <Area type="monotone" dataKey="val" stroke="#A855F7" strokeWidth={3} fill="url(#colorLeads)" />
+                                <Area type="monotone" dataKey="val" stroke="#CCFF00" strokeWidth={3} fill="url(#colorLeads)" />
                             </AreaChart>
                         </ResponsiveContainer>
                     </div>
@@ -291,7 +291,7 @@ export function Dashboard() {
                 {/* Performance Summary */}
                 <div className="glass-card rounded-[2rem] p-8">
                     <div className="flex items-center gap-4 mb-6">
-                        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500/20 to-pink-500/20 flex items-center justify-center">
+                        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center">
                             <Users className="text-white" size={24} />
                         </div>
                         <div>

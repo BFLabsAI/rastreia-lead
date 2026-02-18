@@ -197,7 +197,7 @@ export function Leads() {
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
                 <div>
                     <h2 className="text-3xl font-bold text-white tracking-tight flex items-center gap-3">
-                        <Users className="text-indigo-400" size={32} />
+                        <Users className="text-primary" size={32} />
                         Leads
                     </h2>
                     <p className="text-gray-400 mt-1 text-sm">
@@ -210,7 +210,7 @@ export function Leads() {
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" size={16} />
                         <Input
                             placeholder="Buscar por nome ou telefone..."
-                            className="pl-9 bg-white/5 border-white/10 text-white placeholder:text-gray-500 focus:border-indigo-500/50 focus:ring-indigo-500/20"
+                            className="pl-9 bg-white/5 border-white/10 text-white placeholder:text-gray-500 focus:border-primary/50 focus:ring-primary/20"
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                         />
@@ -218,7 +218,7 @@ export function Leads() {
 
                     <div className="relative min-w-[180px]">
                         <select
-                            className="w-full h-10 px-3 py-2 bg-[#0F1015] border border-white/10 rounded-md text-sm text-white focus:outline-none focus:border-indigo-500/50 focus:ring-2 focus:ring-indigo-500/20 appearance-none cursor-pointer"
+                            className="w-full h-10 px-3 py-2 bg-[#0F1015] border border-white/10 rounded-md text-sm text-white focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/20 appearance-none cursor-pointer"
                             value={filterOrigin}
                             onChange={(e) => setFilterOrigin(e.target.value)}
                         >
@@ -232,7 +232,7 @@ export function Leads() {
 
                     <div className="relative min-w-[180px]">
                         <select
-                            className="w-full h-10 px-3 py-2 bg-[#0F1015] border border-white/10 rounded-md text-sm text-white focus:outline-none focus:border-indigo-500/50 focus:ring-2 focus:ring-indigo-500/20 appearance-none cursor-pointer"
+                            className="w-full h-10 px-3 py-2 bg-[#0F1015] border border-white/10 rounded-md text-sm text-white focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/20 appearance-none cursor-pointer"
                             value={filterInstance}
                             onChange={(e) => setFilterInstance(e.target.value)}
                         >
@@ -264,7 +264,7 @@ export function Leads() {
                             {loading ? (
                                 <tr>
                                     <td colSpan={5} className="p-12 text-center">
-                                        <div className="w-10 h-10 border-4 border-indigo-500/30 border-t-indigo-500 rounded-full animate-spin mx-auto" />
+                                        <div className="w-10 h-10 border-4 border-primary/30 border-t-primary rounded-full animate-spin mx-auto" />
                                         <p className="text-gray-500 mt-4">Carregando leads...</p>
                                     </td>
                                 </tr>
@@ -282,7 +282,7 @@ export function Leads() {
                                     <tr key={lead.id} className="hover:bg-white/[0.02] transition-colors">
                                         <td className="p-4">
                                             <div className="flex items-center gap-3">
-                                                <div className="w-8 h-8 rounded-full bg-indigo-500/10 flex items-center justify-center text-indigo-400 font-medium text-xs">
+                                                <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-medium text-xs">
                                                     {(lead.lead_name || 'L').charAt(0).toUpperCase()}
                                                 </div>
                                                 <span className="text-white font-medium">
@@ -296,7 +296,7 @@ export function Leads() {
                                         <td className="p-4">
                                             <span className={`px-3 py-1 rounded-full text-xs font-medium border ${lead.processedOrigin === 'Orgânico'
                                                 ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
-                                                : 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20'
+                                                : 'bg-primary/10 text-primary border-primary/20'
                                                 }`}>
                                                 {lead.processedOrigin}
                                             </span>
@@ -333,7 +333,7 @@ export function Leads() {
                 <DialogContent className="bg-[#0F1015] border-white/10 text-white sm:max-w-md">
                     <DialogHeader>
                         <DialogTitle className="flex items-center gap-2 text-xl">
-                            <Users size={20} className="text-indigo-400" />
+                            <Users size={20} className="text-primary" />
                             Detalhes do Lead
                         </DialogTitle>
                     </DialogHeader>
@@ -342,7 +342,7 @@ export function Leads() {
                         <div className="space-y-6 mt-4">
                             {/* Header Info */}
                             <div className="flex items-start gap-4 p-4 bg-white/5 rounded-xl border border-white/5">
-                                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-bold text-lg">
+                                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center text-background font-bold text-lg">
                                     {(selectedLead.lead_name || 'L').charAt(0).toUpperCase()}
                                 </div>
                                 <div>
@@ -375,7 +375,7 @@ export function Leads() {
                                 <div className="grid grid-cols-2 gap-3">
                                     <div className="p-3 bg-white/[0.02] rounded-lg border border-white/5">
                                         <span className="text-xs text-gray-500 block mb-1">Fonte</span>
-                                        <Badge variant="outline" className="bg-indigo-500/10 text-indigo-400 border-indigo-500/20">
+                                        <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20">
                                             {(selectedLead as any).processedOrigin}
                                         </Badge>
                                     </div>

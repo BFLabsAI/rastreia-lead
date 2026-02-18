@@ -174,7 +174,7 @@ export function UsersManagement() {
     if (isLoading) {
         return (
             <div className="flex items-center justify-center h-full">
-                <Loader2 className="animate-spin text-indigo-500 w-8 h-8" />
+                <Loader2 className="animate-spin text-primary w-8 h-8" />
             </div>
         );
     }
@@ -226,7 +226,7 @@ export function UsersManagement() {
                                 <td className="px-6 py-4">
                                     <Badge variant="outline" className={
                                         user.role === 'super_admin' ? 'border-purple-500 text-purple-400' :
-                                            user.role === 'admin' ? 'border-indigo-500 text-indigo-400' :
+                                            user.role === 'admin' ? 'border-primary text-primary' :
                                                 'border-gray-700 text-gray-400'
                                     }>
                                         {user.role}
@@ -327,7 +327,7 @@ export function UsersManagement() {
                                             className="flex items-center gap-3 p-2 hover:bg-white/5 rounded-md cursor-pointer transition-colors"
                                             onClick={() => toggleClientAccess(client.id)}
                                         >
-                                            <div className={`w-4 h-4 rounded border flex items-center justify-center transition-colors ${formData.client_ids.includes(client.id) ? 'bg-indigo-500 border-indigo-500' : 'border-gray-600'}`}>
+                                            <div className={`w-4 h-4 rounded border flex items-center justify-center transition-colors ${formData.client_ids.includes(client.id) ? 'bg-primary border-primary' : 'border-gray-600'}`}>
                                                 {formData.client_ids.includes(client.id) && <Check size={12} className="text-white" />}
                                             </div>
                                             <span className="text-sm text-gray-300">{client.nome}</span>
@@ -341,7 +341,7 @@ export function UsersManagement() {
                             <Button type="button" variant="ghost" onClick={() => setIsDialogOpen(false)} className="hover:bg-white/10 text-white">
                                 Cancelar
                             </Button>
-                            <Button type="submit" disabled={isLoading} className="bg-indigo-600 hover:bg-indigo-700 text-white">
+                            <Button type="submit" disabled={isLoading} className="bg-primary hover:bg-primary/90 text-background">
                                 {isLoading ? <Loader2 className="animate-spin w-4 h-4" /> : 'Salvar Usuário'}
                             </Button>
                         </DialogFooter>

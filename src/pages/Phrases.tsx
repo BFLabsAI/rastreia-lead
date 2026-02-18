@@ -98,7 +98,7 @@ export function Phrases() {
         return (
             <div className="p-8 text-center flex flex-col items-center justify-center h-full">
                 <h2 className="text-white text-xl mb-4">Nenhum cliente selecionado</h2>
-                <button onClick={() => navigate('/')} className="text-indigo-400 hover:text-indigo-300 transition-colors">Voltar para Dashboard</button>
+                <button onClick={() => navigate('/')} className="text-primary hover:text-primary/80 transition-colors">Voltar para Dashboard</button>
             </div>
         );
     }
@@ -113,7 +113,7 @@ export function Phrases() {
             <div className="flex items-center justify-between mb-8">
                 <div>
                     <h1 className="text-3xl font-bold text-white mb-2 flex items-center gap-3">
-                        <MessageSquareQuote size={32} className="text-indigo-500" />
+                        <MessageSquareQuote size={32} className="text-primary" />
                         Frases e Origens
                     </h1>
                     <p className="text-gray-400">Gerencie as frases de rastreamento para identificar a origem dos leads do cliente <span className="text-white font-medium">{selectedClient.nome}</span>.</p>
@@ -135,7 +135,7 @@ export function Phrases() {
                                     value={currentPhrase}
                                     onChange={(e) => setCurrentPhrase(e.target.value)}
                                     placeholder="Ex: vim pelo instagram"
-                                    className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white focus:border-indigo-500/50 outline-none transition-all placeholder:text-gray-600"
+                                    className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white focus:border-primary/50 outline-none transition-all placeholder:text-gray-600"
                                 />
                                 <p className="text-xs text-gray-500 mt-2">A frase exata ou parcial que o cliente envia.</p>
                             </div>
@@ -147,7 +147,7 @@ export function Phrases() {
                                     value={currentOrigin}
                                     onChange={(e) => setCurrentOrigin(e.target.value)}
                                     placeholder="Ex: Instagram"
-                                    className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white focus:border-indigo-500/50 outline-none transition-all placeholder:text-gray-600"
+                                    className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white focus:border-primary/50 outline-none transition-all placeholder:text-gray-600"
                                 />
                                 <p className="text-xs text-gray-500 mt-2">A origem que será salva no relatório.</p>
                             </div>
@@ -155,7 +155,7 @@ export function Phrases() {
                             <button
                                 onClick={handleAddPhrase}
                                 disabled={isLoadingPhrases}
-                                className="w-full py-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-bold transition-all shadow-lg shadow-indigo-600/20 flex items-center justify-center gap-2 mt-4"
+                                className="w-full py-3 bg-primary hover:bg-primary/90 text-background rounded-xl font-bold transition-all shadow-lg shadow-primary/20 flex items-center justify-center gap-2 mt-4"
                             >
                                 <Plus size={20} />
                                 Adicionar Regra
@@ -177,7 +177,7 @@ export function Phrases() {
                                     placeholder="Buscar regras..."
                                     value={searchTerm}
                                     onChange={(e) => setSearchTerm(e.target.value)}
-                                    className="pl-9 pr-4 py-2 bg-white/5 border border-white/10 rounded-lg text-sm text-white focus:border-indigo-500/50 outline-none w-full sm:w-64"
+                                    className="pl-9 pr-4 py-2 bg-white/5 border border-white/10 rounded-lg text-sm text-white focus:border-primary/50 outline-none w-full sm:w-64"
                                 />
                             </div>
                         </div>
@@ -185,14 +185,14 @@ export function Phrases() {
                         <div className="p-6">
                             {isLoadingPhrases ? (
                                 <div className="flex justify-center py-12">
-                                    <Loader2 className="animate-spin text-indigo-500 w-8 h-8" />
+                                    <Loader2 className="animate-spin text-primary w-8 h-8" />
                                 </div>
                             ) : filteredPhrases.length > 0 ? (
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     {filteredPhrases.map((item) => (
                                         <div key={item.id} className="p-4 bg-white/5 rounded-xl border border-white/5 hover:border-white/10 transition-all group flex flex-col justify-between min-h-[100px]">
                                             <div className="flex justify-between items-start mb-3">
-                                                <span className="text-xs font-bold text-indigo-300 bg-indigo-500/20 px-2.5 py-1 rounded-md border border-indigo-500/20">
+                                                <span className="text-xs font-bold text-primary bg-primary/20 px-2.5 py-1 rounded-md border border-primary/20">
                                                     {item.origem}
                                                 </span>
                                                 <button

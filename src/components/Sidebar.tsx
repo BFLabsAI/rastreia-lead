@@ -48,7 +48,7 @@ export function Sidebar({ }: SidebarProps) {
                         onClick={() => setIsClientDropdownOpen(!isClientDropdownOpen)}
                         className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/5 transition-colors group"
                     >
-                        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg shadow-indigo-500/10 text-white text-xs font-bold">
+                        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center shadow-lg shadow-primary/20 text-background text-xs font-bold">
                             {selectedClient ? selectedClient.nome.substring(0, 2).toUpperCase() : <Users size={14} />}
                         </div>
                         <div className="flex-1 text-left min-w-0">
@@ -81,7 +81,7 @@ export function Sidebar({ }: SidebarProps) {
                                     >
                                         <div className={clsx(
                                             "w-1.5 h-1.5 rounded-full flex-shrink-0",
-                                            selectedClient?.id === client.id ? "bg-indigo-500 shadow-[0_0_10px_#6366f1]" : "bg-gray-700"
+                                            selectedClient?.id === client.id ? "bg-primary shadow-[0_0_10px_#CCFF00]" : "bg-gray-700"
                                         )} />
                                         <span className="font-medium text-sm truncate">{client.nome}</span>
                                     </button>
@@ -95,7 +95,7 @@ export function Sidebar({ }: SidebarProps) {
                                         navigate('/clients/new');
                                         setIsClientDropdownOpen(false);
                                     }}
-                                    className="w-full text-left px-3 py-2.5 rounded-lg transition-all flex items-center gap-3 text-indigo-400 hover:text-white hover:bg-white/5 border-t border-white/5 mt-1"
+                                    className="w-full text-left px-3 py-2.5 rounded-lg transition-all flex items-center gap-3 text-primary hover:text-primary/80 hover:bg-white/5 border-t border-white/5 mt-1"
                                 >
                                     <Plus size={14} />
                                     <span className="font-medium text-sm">Novo Cliente</span>
@@ -126,20 +126,20 @@ export function Sidebar({ }: SidebarProps) {
                             className={({ isActive }) => clsx(
                                 "w-full flex items-center gap-4 px-4 py-3.5 rounded-xl transition-all duration-300 group relative overflow-hidden",
                                 isActive
-                                    ? "text-white shadow-lg shadow-purple-500/10"
+                                    ? "text-white shadow-lg shadow-primary/10"
                                     : "text-gray-400 hover:text-white hover:bg-white/5"
                             )}
                         >
                             {({ isActive }) => (
                                 <>
                                     {isActive && (
-                                        <div className="absolute inset-0 bg-gradient-to-r from-indigo-600/20 to-purple-600/20 border-l-2 border-indigo-500" />
+                                        <div className="absolute inset-0 bg-gradient-to-r from-primary/15 to-primary/5 border-l-2 border-primary" />
                                     )}
                                     <item.icon
                                         size={20}
                                         className={clsx(
                                             "relative z-10 transition-colors duration-300",
-                                            isActive ? "text-indigo-400" : "text-gray-500 group-hover:text-gray-300"
+                                            isActive ? "text-primary" : "text-gray-500 group-hover:text-gray-300"
                                         )}
                                     />
                                     <span className="relative z-10 font-medium text-sm tracking-wide">{item.label}</span>
@@ -154,20 +154,20 @@ export function Sidebar({ }: SidebarProps) {
                         className={({ isActive }) => clsx(
                             "w-full flex items-center gap-4 px-4 py-3.5 rounded-xl transition-all duration-300 group relative overflow-hidden mt-4",
                             isActive
-                                ? "text-white shadow-lg shadow-purple-500/10"
+                                ? "text-white shadow-lg shadow-primary/10"
                                 : "text-gray-400 hover:text-white hover:bg-white/5"
                         )}
                     >
                         {({ isActive }) => (
                             <>
                                 {isActive && (
-                                    <div className="absolute inset-0 bg-gradient-to-r from-indigo-600/20 to-purple-600/20 border-l-2 border-indigo-500" />
+                                    <div className="absolute inset-0 bg-gradient-to-r from-primary/15 to-primary/5 border-l-2 border-primary" />
                                 )}
                                 <Settings
                                     size={20}
                                     className={clsx(
                                         "relative z-10 transition-colors duration-300",
-                                        isActive ? "text-indigo-400" : "text-gray-500 group-hover:text-gray-300"
+                                        isActive ? "text-primary" : "text-gray-500 group-hover:text-gray-300"
                                     )}
                                 />
                                 <span className="relative z-10 font-medium text-sm tracking-wide">Dados do Cliente</span>
@@ -192,7 +192,7 @@ export function Sidebar({ }: SidebarProps) {
                     {user?.role === 'super_admin' && (
                         <NavLink
                             to="/clients/new"
-                            className="flex items-center gap-2 text-indigo-400 hover:text-indigo-300 text-xs font-medium transition-colors w-full px-1 mb-2"
+                            className="flex items-center gap-2 text-primary hover:text-primary/80 text-xs font-medium transition-colors w-full px-1 mb-2"
                         >
                             <UserPlus size={14} />
                             <span>Novo Cliente</span>
@@ -203,7 +203,7 @@ export function Sidebar({ }: SidebarProps) {
                     {(user?.role === 'super_admin') && (
                         <NavLink
                             to="/users"
-                            className="flex items-center gap-2 text-purple-400 hover:text-purple-300 text-xs font-medium transition-colors w-full px-1 mb-2"
+                            className="flex items-center gap-2 text-secondary hover:text-secondary/80 text-xs font-medium transition-colors w-full px-1 mb-2"
                         >
                             <Users size={14} />
                             <span>Gerenciar Usuários</span>
