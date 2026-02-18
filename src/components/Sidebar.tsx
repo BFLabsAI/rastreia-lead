@@ -34,12 +34,8 @@ export function Sidebar({ }: SidebarProps) {
             <div className="h-full bg-[#0A0A0A]/80 backdrop-blur-xl border border-white/5 rounded-2xl flex flex-col shadow-2xl">
 
                 {/* Logo Area */}
-                <div className="p-6 flex items-center gap-3 border-b border-white/5">
-                    <img src="/logo.png" alt="LeadHub Logo" className="w-10 h-10 object-contain rounded-lg" />
-                    <div>
-                        <h1 className="text-xl font-bold text-white tracking-wide">LeadHub</h1>
-                        <p className="text-[10px] text-gray-400 font-medium tracking-wider uppercase">Dashboard</p>
-                    </div>
+                <div className="p-6 flex items-center justify-center border-b border-white/5">
+                    <img src="/logo-rastreia-lead2.png" alt="Rastreia Lead Logo" className="w-48 h-auto object-contain" />
                 </div>
 
                 {/* Client Selector (Moved to Sidebar) */}
@@ -135,13 +131,21 @@ export function Sidebar({ }: SidebarProps) {
                                     {isActive && (
                                         <div className="absolute inset-0 bg-gradient-to-r from-primary/15 to-primary/5 border-l-2 border-primary" />
                                     )}
-                                    <item.icon
-                                        size={20}
-                                        className={clsx(
-                                            "relative z-10 transition-colors duration-300",
-                                            isActive ? "text-primary" : "text-gray-500 group-hover:text-gray-300"
-                                        )}
-                                    />
+                                    {item.label === 'Meta Ads' ? (
+                                        <img src="/icon-meta-ads.png" alt="Meta Ads" className={clsx("w-5 h-5 object-contain brightness-0 invert transition-opacity duration-300", isActive ? "opacity-100" : "opacity-50 group-hover:opacity-100")} />
+                                    ) : item.label === 'Google Ads' ? (
+                                        <img src="/icon-google-ads.png" alt="Google Ads" className={clsx("w-5 h-5 object-contain brightness-0 invert transition-opacity duration-300", isActive ? "opacity-100" : "opacity-50 group-hover:opacity-100")} />
+                                    ) : item.label === 'WhatsApp' ? (
+                                        <img src="/icon-whatsapp.png" alt="WhatsApp" className={clsx("w-5 h-5 object-contain brightness-0 invert transition-opacity duration-300", isActive ? "opacity-100" : "opacity-50 group-hover:opacity-100")} />
+                                    ) : (
+                                        <item.icon
+                                            size={20}
+                                            className={clsx(
+                                                "relative z-10 transition-colors duration-300",
+                                                isActive ? "text-primary" : "text-gray-500 group-hover:text-gray-300"
+                                            )}
+                                        />
+                                    )}
                                     <span className="relative z-10 font-medium text-sm tracking-wide">{item.label}</span>
                                 </>
                             )}

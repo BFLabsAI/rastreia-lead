@@ -1,73 +1,66 @@
-# React + TypeScript + Vite
+# Dashboard Clientes BF
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Dashboard de gerenciamento e análise de leads para a BF Labs AI. O sistema permite visualizar métricas de campanhas (Meta Ads, Google Ads), gerenciar leads, clientes e usuários.
 
-Currently, two official plugins are available:
+## 🚀 Tecnologias
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- **Frontend:** [React](https://react.dev/) + [Vite](https://vitejs.dev/)
+- **Linguagem:** [TypeScript](https://www.typescriptlang.org/)
+- **Estilização:** [Tailwind CSS](https://tailwindcss.com/)
+- **Backend/BaaS:** [Supabase](https://supabase.com/)
+- **Gerenciamento de Estado:** [Zustand](https://github.com/pmndrs/zustand)
+- **Rotas:** [React Router Dom](https://reactrouter.com/)
+- **Ícones:** [Lucide React](https://lucide.dev/)
 
-## React Compiler
+## ✨ Funcionalidades
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- **Dashboard Geral:** Visão consolidada de leads, vendas e performance.
+- **Relatório de Leads:** Análise detalhada de origens de tráfego e conversão.
+- **Integração com Meta e Google Ads:** Visualização de métricas de campanhas especificas.
+- **Gestão de Clientes:** Seleção e administração de diferentes clientes/contas.
+- **Gestão de Usuários:** Controle de acesso baseada em funções (Admin, Super Admin).
+- **Conexão WhatsApp:** Integração para disparos e atendimento.
 
-## Expanding the ESLint configuration
+## 🛠️ Instalação e Execução
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+### Pré-requisitos
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+- Node.js (versão 18 ou superior)
+- pnpm (recomendado) ou npm
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+### Passos
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+1. **Clone o repositório:**
+   ```bash
+   git clone https://github.com/BFLabsAI/dashboard-clientes-bf.git
+   cd dashboard-clientes-bf
+   ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+2. **Instale as dependências:**
+   ```bash
+   pnpm install
+   # ou
+   npm install
+   ```
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+3. **Configuração de Variáveis de Ambiente:**
+   Crie um arquivo `.env` na raiz do projeto com as chaves do Supabase:
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+   ```env
+   VITE_SUPABASE_URL=sua_url_supabase
+   VITE_SUPABASE_ANON_KEY=sua_chave_anonima
+   ```
+
+4. **Inicie o servidor de desenvolvimento:**
+   ```bash
+   pnpm dev
+   # ou
+   npm run dev
+   ```
+
+## 📦 Scripts Disponíveis
+
+- `pnpm dev`: Inicia o servidor local.
+- `pnpm build`: Compila o projeto para produção.
+- `pnpm lint`: Executa a verificação de código com ESLint.
+- `pnpm preview`: Visualiza o build de produção localmente.

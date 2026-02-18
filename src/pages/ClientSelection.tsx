@@ -59,9 +59,9 @@ export function ClientSelection({ onClientSelected }: ClientSelectionProps) {
                 {/* Logo & Title */}
                 <div className="text-center mb-12">
                     <div className="inline-flex items-center gap-3 mb-4">
-                        <img src="/logo.png" alt="LeadHub Logo" className="w-20 h-20 object-contain rounded-3xl shadow-lg shadow-primary/30" />
+                        <img src="/logo.png" alt="Rastreia Lead Logo" className="w-20 h-20 object-contain rounded-3xl shadow-lg shadow-primary/30" />
                     </div>
-                    <h1 className="text-4xl font-bold text-white mb-2">LeadHub</h1>
+                    <h1 className="text-4xl font-bold text-white mb-2">Rastreia Lead</h1>
                     <p className="text-gray-400 text-lg">Dashboard</p>
                 </div>
 
@@ -176,7 +176,7 @@ export function ClientSelection({ onClientSelected }: ClientSelectionProps) {
                 </div>
 
                 <p className="text-center text-gray-600 text-sm mt-8">
-                    © 2026 LeadHub Dashboard. Todos os direitos reservados.
+                    © 2026 Rastreia Lead Dashboard. Todos os direitos reservados.
                 </p>
             </div>
         </div>

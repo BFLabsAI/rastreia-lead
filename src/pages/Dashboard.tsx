@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { TrendingUp, Users, Zap, Target } from 'lucide-react';
+import { Users } from 'lucide-react';
 import { AreaChart, Area, ResponsiveContainer } from 'recharts';
 import { useClient } from '../contexts/ClientContext';
 import { useDateRange } from '../contexts/DateContext';
@@ -138,40 +138,40 @@ export function Dashboard() {
                 {/* Meta Ads Card */}
                 {activeMeta && (
                     <div className="glass-card rounded-[2rem] p-6 relative overflow-hidden group h-[26rem] flex flex-col justify-between">
-                        <div className="absolute inset-0 bg-gradient-to-b from-cyan-500/5 to-transparent opacity-50 group-hover:opacity-100 transition-opacity duration-500" />
+                        <div className="absolute inset-0 bg-gradient-to-b from-white/[0.03] to-transparent opacity-50 group-hover:opacity-100 transition-opacity duration-500" />
 
                         {/* Top Icon */}
                         <div className="flex flex-col items-center relative z-10 pt-4">
-                            <div className="w-14 h-14 rounded-2xl bg-[#0F172A] border border-cyan-500/30 flex items-center justify-center text-cyan-400 shadow-[0_0_15px_rgba(6,182,212,0.15)] mb-4">
-                                <Zap size={28} />
+                            <div className="w-14 h-14 rounded-2xl bg-surface border border-white/10 flex items-center justify-center text-gray-400 mb-4 p-3">
+                                <img src="/icon-meta-ads.png" alt="Meta Ads" className="w-full h-full object-contain brightness-0 invert" />
                             </div>
-                            <span className="text-gray-400 font-medium text-sm tracking-widest uppercase">Meta Ads</span>
+                            <span className="text-gray-500 font-medium text-sm tracking-widest uppercase">Meta Ads</span>
                         </div>
 
                         {/* Main Value */}
                         <div className="text-center relative z-10">
                             <div className="flex items-baseline justify-center gap-1">
-                                <span className="text-5xl font-bold text-white tracking-tighter drop-shadow-lg">
+                                <span className="text-5xl font-bold text-primary tracking-tighter">
                                     {isLoading ? '...' : formatCurrency(metaTotal)}
                                 </span>
                             </div>
-                            <p className="text-cyan-400/80 text-xs mt-2 font-medium bg-cyan-500/10 py-1 px-3 rounded-full inline-block border border-cyan-500/20">
+                            <p className="text-primary text-xs mt-2 font-medium bg-primary/10 py-1 px-3 rounded-full inline-block border border-primary/20">
                                 TOTAL INVESTIDO
                             </p>
                         </div>
 
                         {/* Chart Area */}
                         <div className="h-24 -mx-6 -mb-6 relative">
-                            <div className="absolute inset-0 bg-gradient-to-t from-cyan-500/10 to-transparent pointer-events-none" />
+                            <div className="absolute inset-0 bg-gradient-to-t from-primary/10 to-transparent pointer-events-none" />
                             <ResponsiveContainer width="100%" height="100%">
                                 <AreaChart data={metaChartData.length > 0 ? metaChartData : [{ val: 0 }]}>
                                     <defs>
                                         <linearGradient id="colorMeta" x1="0" y1="0" x2="0" y2="1">
-                                            <stop offset="5%" stopColor="#06B6D4" stopOpacity={0.4} />
-                                            <stop offset="95%" stopColor="#06B6D4" stopOpacity={0} />
+                                            <stop offset="5%" stopColor="#CCFF00" stopOpacity={0.4} />
+                                            <stop offset="95%" stopColor="#CCFF00" stopOpacity={0} />
                                         </linearGradient>
                                     </defs>
-                                    <Area type="monotone" dataKey="val" stroke="#06B6D4" strokeWidth={3} fill="url(#colorMeta)" />
+                                    <Area type="monotone" dataKey="val" stroke="#CCFF00" strokeWidth={2} fill="url(#colorMeta)" />
                                 </AreaChart>
                             </ResponsiveContainer>
                         </div>
@@ -181,37 +181,37 @@ export function Dashboard() {
                 {/* Google Ads Card */}
                 {activeGoogle && (
                     <div className="glass-card rounded-[2rem] p-6 relative overflow-hidden group h-[26rem] flex flex-col justify-between">
-                        <div className="absolute inset-0 bg-gradient-to-b from-lime-500/5 to-transparent opacity-50 group-hover:opacity-100 transition-opacity duration-500" />
+                        <div className="absolute inset-0 bg-gradient-to-b from-white/[0.03] to-transparent opacity-50 group-hover:opacity-100 transition-opacity duration-500" />
 
                         <div className="flex flex-col items-center relative z-10 pt-4">
-                            <div className="w-14 h-14 rounded-2xl bg-[#0F172A] border border-lime-500/30 flex items-center justify-center text-lime-400 shadow-[0_0_15px_rgba(34,197,94,0.15)] mb-4">
-                                <TrendingUp size={28} />
+                            <div className="w-14 h-14 rounded-2xl bg-surface border border-white/10 flex items-center justify-center text-gray-400 mb-4 p-3">
+                                <img src="/icon-google-ads.png" alt="Google Ads" className="w-full h-full object-contain brightness-0 invert" />
                             </div>
-                            <span className="text-gray-400 font-medium text-sm tracking-widest uppercase">Google Ads</span>
+                            <span className="text-gray-500 font-medium text-sm tracking-widest uppercase">Google Ads</span>
                         </div>
 
                         <div className="text-center relative z-10">
                             <div className="flex items-baseline justify-center gap-1">
-                                <span className="text-5xl font-bold text-white tracking-tighter drop-shadow-lg">
+                                <span className="text-5xl font-bold text-primary tracking-tighter">
                                     {isLoading ? '...' : formatCurrency(googleTotal)}
                                 </span>
                             </div>
-                            <p className="text-lime-400/80 text-xs mt-2 font-medium bg-lime-500/10 py-1 px-3 rounded-full inline-block border border-lime-500/20">
+                            <p className="text-primary text-xs mt-2 font-medium bg-primary/10 py-1 px-3 rounded-full inline-block border border-primary/20">
                                 TOTAL INVESTIDO
                             </p>
                         </div>
 
                         <div className="h-24 -mx-6 -mb-6 relative">
-                            <div className="absolute inset-0 bg-gradient-to-t from-lime-500/10 to-transparent pointer-events-none" />
+                            <div className="absolute inset-0 bg-gradient-to-t from-primary/10 to-transparent pointer-events-none" />
                             <ResponsiveContainer width="100%" height="100%">
                                 <AreaChart data={googleChartData.length > 0 ? googleChartData : [{ val: 0 }]}>
                                     <defs>
                                         <linearGradient id="colorGoogle" x1="0" y1="0" x2="0" y2="1">
-                                            <stop offset="5%" stopColor="#84CC16" stopOpacity={0.4} />
-                                            <stop offset="95%" stopColor="#84CC16" stopOpacity={0} />
+                                            <stop offset="5%" stopColor="#CCFF00" stopOpacity={0.4} />
+                                            <stop offset="95%" stopColor="#CCFF00" stopOpacity={0} />
                                         </linearGradient>
                                     </defs>
-                                    <Area type="monotone" dataKey="val" stroke="#84CC16" strokeWidth={3} fill="url(#colorGoogle)" />
+                                    <Area type="monotone" dataKey="val" stroke="#CCFF00" strokeWidth={2} fill="url(#colorGoogle)" />
                                 </AreaChart>
                             </ResponsiveContainer>
                         </div>
@@ -220,22 +220,22 @@ export function Dashboard() {
 
                 {/* Leads Card */}
                 <div className="glass-card rounded-[2rem] p-6 relative overflow-hidden group h-[26rem] flex flex-col justify-between">
-                    <div className="absolute inset-0 bg-gradient-to-b from-primary/5 to-transparent opacity-50 group-hover:opacity-100 transition-opacity duration-500" />
+                    <div className="absolute inset-0 bg-gradient-to-b from-white/[0.03] to-transparent opacity-50 group-hover:opacity-100 transition-opacity duration-500" />
 
                     <div className="flex flex-col items-center relative z-10 pt-4">
-                        <div className="w-14 h-14 rounded-2xl bg-[#0F172A] border border-primary/30 flex items-center justify-center text-primary shadow-[0_0_15px_rgba(204,255,0,0.15)] mb-4">
+                        <div className="w-14 h-14 rounded-2xl bg-surface border border-white/10 flex items-center justify-center text-gray-400 mb-4">
                             <Users size={28} />
                         </div>
-                        <span className="text-gray-400 font-medium text-sm tracking-widest uppercase">Leads</span>
+                        <span className="text-gray-500 font-medium text-sm tracking-widest uppercase">Leads</span>
                     </div>
 
                     <div className="text-center relative z-10">
                         <div className="flex items-baseline justify-center gap-1">
-                            <span className="text-5xl font-bold text-white tracking-tighter drop-shadow-lg">
+                            <span className="text-5xl font-bold text-primary tracking-tighter">
                                 {isLoading ? '...' : leadsTotal}
                             </span>
                         </div>
-                        <p className="text-primary/80 text-xs mt-2 font-medium bg-primary/10 py-1 px-3 rounded-full inline-block border border-primary/20">
+                        <p className="text-primary text-xs mt-2 font-medium bg-primary/10 py-1 px-3 rounded-full inline-block border border-primary/20">
                             TOTAL NO PERÍODO
                         </p>
                     </div>
@@ -250,7 +250,7 @@ export function Dashboard() {
                                         <stop offset="95%" stopColor="#CCFF00" stopOpacity={0} />
                                     </linearGradient>
                                 </defs>
-                                <Area type="monotone" dataKey="val" stroke="#CCFF00" strokeWidth={3} fill="url(#colorLeads)" />
+                                <Area type="monotone" dataKey="val" stroke="#CCFF00" strokeWidth={2} fill="url(#colorLeads)" />
                             </AreaChart>
                         </ResponsiveContainer>
                     </div>
@@ -262,26 +262,26 @@ export function Dashboard() {
                 {/* Combined Investment Card */}
                 <div className="glass-card rounded-[2rem] p-8">
                     <div className="flex items-center gap-4 mb-6">
-                        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-cyan-500/20 to-lime-500/20 flex items-center justify-center">
-                            <Target className="text-white" size={24} />
+                        <div className="w-12 h-12 rounded-xl bg-surface border border-white/10 flex items-center justify-center p-2.5">
+                            <img src="/icon-investment.png" alt="Investimento Total" className="w-full h-full object-contain brightness-0 invert" />
                         </div>
                         <div>
                             <p className="text-gray-400 text-sm">Investimento Total</p>
-                            <p className="text-2xl font-bold text-white">
+                            <p className="text-2xl font-bold text-primary">
                                 {isLoading ? '...' : formatCurrency((activeMeta ? metaTotal : 0) + (activeGoogle ? googleTotal : 0))}
                             </p>
                         </div>
                     </div>
                     <div className="flex gap-4">
                         {activeMeta && (
-                            <div className="flex-1 bg-cyan-500/10 rounded-xl p-4 border border-cyan-500/20">
-                                <p className="text-cyan-400 text-xs font-medium">Meta</p>
+                            <div className="flex-1 bg-surface rounded-xl p-4 border border-white/5">
+                                <p className="text-gray-500 text-xs font-medium uppercase">Meta</p>
                                 <p className="text-white font-bold">{formatCurrency(metaTotal)}</p>
                             </div>
                         )}
                         {activeGoogle && (
-                            <div className="flex-1 bg-lime-500/10 rounded-xl p-4 border border-lime-500/20">
-                                <p className="text-lime-400 text-xs font-medium">Google</p>
+                            <div className="flex-1 bg-surface rounded-xl p-4 border border-white/5">
+                                <p className="text-gray-500 text-xs font-medium uppercase">Google</p>
                                 <p className="text-white font-bold">{formatCurrency(googleTotal)}</p>
                             </div>
                         )}
@@ -291,12 +291,12 @@ export function Dashboard() {
                 {/* Performance Summary */}
                 <div className="glass-card rounded-[2rem] p-8">
                     <div className="flex items-center gap-4 mb-6">
-                        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center">
-                            <Users className="text-white" size={24} />
+                        <div className="w-12 h-12 rounded-xl bg-surface border border-white/10 flex items-center justify-center p-2.5">
+                            <img src="/icon-cost-per-lead.png" alt="Custo por Lead" className="w-full h-full object-contain brightness-0 invert" />
                         </div>
                         <div>
                             <p className="text-gray-400 text-sm">Custo por Lead</p>
-                            <p className="text-2xl font-bold text-white">
+                            <p className="text-2xl font-bold text-primary">
                                 {isLoading || leadsTotal === 0 ? '...' : formatCurrency((metaTotal + googleTotal) / leadsTotal)}
                             </p>
                         </div>
