@@ -1,9 +1,10 @@
 import { useEffect, useState, useMemo } from 'react';
-import { TrendingUp, MousePointer, Eye, Target, ChevronDown, ChevronRight } from 'lucide-react';
+import { MousePointer, Eye, Target, ChevronDown, ChevronRight, DollarSign, Search, TrendingUp } from 'lucide-react';
 import { useDateRange } from '../contexts/DateContext';
 import { useClient } from '../contexts/ClientContext';
 import { supabase } from '../lib/supabase';
 import { startOfDay, endOfDay, format } from 'date-fns';
+import { Progress } from '../components/ui/progress';
 
 // --- Types ---
 
@@ -355,13 +356,16 @@ export function GoogleDetail() {
     const globalCPC = globalMetrics.clicks > 0 ? globalMetrics.cost / globalMetrics.clicks : 0;
     const globalCTR = globalMetrics.imp > 0 ? (globalMetrics.clicks / globalMetrics.imp) * 100 : 0;
 
+    const formatCurrency = (val: number) => val >= 1000 ? `R$ ${(val / 1000).toFixed(2)}k` : `R$ ${val.toFixed(2)}`;
+    const formatNumber = (val: number) => val >= 1000 ? `${(val / 1000).toFixed(1)}k` : val.toString();
+
     return (
         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
 
             {/* Header */}
             <div>
                 <h2 className="text-3xl font-bold text-white tracking-tight flex items-center gap-3">
-                    <TrendingUp className="text-lime-400" size={32} />
+                    <img src="/icon-google-ads.png" alt="Google Ads" className="w-8 h-8 object-contain brightness-0 invert" />
                     Google Ads
                 </h2>
                 <p className="text-gray-400 mt-1 text-sm">
@@ -372,7 +376,7 @@ export function GoogleDetail() {
             {/* KPI Cards */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                 <div className="glass-card p-6 rounded-[2rem] flex flex-col justify-between h-40 relative overflow-hidden">
-                    <div className="absolute top-0 right-0 p-4 opacity-10"><MousePointer size={64} className="text-blue-400" /></div>
+                    <div className="absolute top-0 right-0 p-4 opacity-10"><MousePointer className="text-blue-400" size={64} /></div>
                     <div>
                         <p className="text-gray-400 text-xs font-bold uppercase tracking-wider">CPC Médio</p>
                         <p className="text-3xl font-bold text-white mt-2">
@@ -476,72 +480,138 @@ export function GoogleDetail() {
                                         </div>
                                     </div>
 
-                                    {/* Keywords (Expanded) */}
+                                    {/* Keywords - REDESIGNED WITH CARDS */}
                                     {camp.isExpanded && (
-                                        <div className="bg-white/[0.01] border-l-2 border-lime-500/30 ml-6">
+                                        <div className="p-4 bg-white/[0.01] border-l-2 border-lime-500/30 ml-6 space-y-3">
                                             {camp.keywords && camp.keywords.length > 0 ? (
-                                                camp.keywords.map(kw => (
-                                                    <div key={kw.id}>
-                                                        {/* Keyword Row */}
-                                                        <div
-                                                            className={`p-3 pl-6 hover:bg-white/[0.02] transition-colors flex items-center gap-4 cursor-pointer`}
-                                                            onClick={() => toggleKeyword(camp.id, kw.id)}
-                                                        >
-                                                            <div className="w-5">
-                                                                {loadingTerms === kw.id ? (
-                                                                    <div className="w-3 h-3 border-2 border-blue-500/30 border-t-blue-500 rounded-full animate-spin" />
-                                                                ) : kw.isExpanded ? (
-                                                                    <ChevronDown className="text-blue-400" size={16} />
-                                                                ) : (
-                                                                    <ChevronRight className="text-gray-600" size={16} />
-                                                                )}
-                                                            </div>
-                                                            <div className="flex-1">
-                                                                <p className="text-gray-300 text-sm font-medium">{kw.text}</p>
+                                                camp.keywords.map(kw => {
+                                                    const costPercentage = camp.cost > 0 ? (kw.cost / camp.cost) * 100 : 0;
 
-                                                            </div>
-                                                            <div className="flex gap-6">
-                                                                <div className="text-right w-20">
-                                                                    <p className="text-xs text-gray-600">Imp</p>
-                                                                    <p className="text-gray-400 font-mono text-sm">{kw.impressions}</p>
-                                                                </div>
-                                                                <div className="text-right w-20">
-                                                                    <p className="text-xs text-gray-600">Cliques</p>
-                                                                    <p className="text-gray-400 font-mono text-sm">{kw.clicks}</p>
-                                                                </div>
-                                                                <div className="text-right w-24">
-                                                                    <p className="text-xs text-gray-600">Custo</p>
-                                                                    <p className="text-lime-400/80 font-mono text-sm">R$ {kw.cost.toFixed(2)}</p>
-                                                                </div>
-                                                                <div className="text-right w-16">
-                                                                    <p className="text-xs text-gray-600">Conv</p>
-                                                                    <p className="text-lime-400 font-mono text-sm">{kw.conversions}</p>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-
-                                                        {/* Search Terms (Expanded) */}
-                                                        {kw.isExpanded && (
-                                                            <div className="bg-white/[0.01] border-l-2 border-blue-500/20 ml-10 py-2">
-                                                                {kw.searchTerms && kw.searchTerms.length > 0 ? (
-                                                                    kw.searchTerms.map(term => (
-                                                                        <div key={term.id} className="px-6 py-2 flex items-center gap-4">
-                                                                            <p className="flex-1 text-gray-400 text-xs">{term.text}</p>
-                                                                            <div className="flex gap-4">
-                                                                                <span className="text-gray-500 text-xs font-mono">{term.impressions} imp</span>
-                                                                                <span className="text-gray-500 text-xs font-mono">{term.clicks} cliques</span>
-                                                                                <span className="text-lime-400/70 text-xs font-mono">R$ {term.cost.toFixed(2)}</span>
-                                                                                <span className="text-lime-400/70 text-xs font-mono">{term.conversions} conv</span>
-                                                                            </div>
+                                                    return (
+                                                        <div key={kw.id}>
+                                                            {/* Keyword Card */}
+                                                            <div
+                                                                className="bg-white/[0.03] rounded-2xl p-4 border border-white/5 hover:border-lime-500/30 transition-all cursor-pointer"
+                                                                onClick={() => toggleKeyword(camp.id, kw.id)}
+                                                            >
+                                                                {/* Header */}
+                                                                <div className="flex items-center justify-between mb-3">
+                                                                    <div className="flex items-center gap-3">
+                                                                        <div className="w-6 h-6 rounded-lg bg-lime-500/10 flex items-center justify-center">
+                                                                            {loadingTerms === kw.id ? (
+                                                                                <div className="w-3 h-3 border-2 border-lime-500/30 border-t-lime-500 rounded-full animate-spin" />
+                                                                            ) : kw.isExpanded ? (
+                                                                                <ChevronDown className="text-lime-400" size={14} />
+                                                                            ) : (
+                                                                                <ChevronRight className="text-lime-400" size={14} />
+                                                                            )}
                                                                         </div>
-                                                                    ))
-                                                                ) : (
-                                                                    <p className="px-6 py-2 text-gray-600 text-xs">Nenhum termo de pesquisa encontrado.</p>
-                                                                )}
+                                                                        <div>
+                                                                            <p className="text-white font-medium">{kw.text}</p>
+                                                                            {kw.matchType && (
+                                                                                <span className="text-xs text-gray-500 bg-white/5 px-2 py-0.5 rounded">
+                                                                                    {kw.matchType}
+                                                                                </span>
+                                                                            )}
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+
+                                                                {/* Progress Bar */}
+                                                                <div className="mb-4">
+                                                                    <div className="flex justify-between text-xs text-gray-500 mb-1">
+                                                                        <span>Proporção do Custo</span>
+                                                                        <span className="text-lime-400 font-mono">{formatCurrency(kw.cost)} / {formatCurrency(camp.cost)}</span>
+                                                                    </div>
+                                                                    <Progress value={costPercentage} variant="lime" size="md" />
+                                                                </div>
+
+                                                                {/* Metrics Badges */}
+                                                                <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                                                                    <div className="bg-lime-500/10 rounded-xl p-2.5 text-center">
+                                                                        <div className="flex items-center justify-center gap-1.5 mb-1">
+                                                                            <DollarSign size={12} className="text-lime-400" />
+                                                                            <span className="text-[10px] text-gray-500 uppercase">Custo</span>
+                                                                        </div>
+                                                                        <p className="text-lime-400 font-mono font-bold text-sm">{formatCurrency(kw.cost)}</p>
+                                                                    </div>
+                                                                    <div className="bg-gray-500/10 rounded-xl p-2.5 text-center">
+                                                                        <div className="flex items-center justify-center gap-1.5 mb-1">
+                                                                            <Eye size={12} className="text-gray-400" />
+                                                                            <span className="text-[10px] text-gray-500 uppercase">Impr.</span>
+                                                                        </div>
+                                                                        <p className="text-gray-300 font-mono font-bold text-sm">{formatNumber(kw.impressions)}</p>
+                                                                    </div>
+                                                                    <div className="bg-blue-500/10 rounded-xl p-2.5 text-center">
+                                                                        <div className="flex items-center justify-center gap-1.5 mb-1">
+                                                                            <MousePointer size={12} className="text-blue-400" />
+                                                                            <span className="text-[10px] text-gray-500 uppercase">Cliques</span>
+                                                                        </div>
+                                                                        <p className="text-blue-400 font-mono font-bold text-sm">{kw.clicks}</p>
+                                                                    </div>
+                                                                    <div className="bg-green-500/10 rounded-xl p-2.5 text-center">
+                                                                        <div className="flex items-center justify-center gap-1.5 mb-1">
+                                                                            <Target size={12} className="text-green-400" />
+                                                                            <span className="text-[10px] text-gray-500 uppercase">Conv.</span>
+                                                                        </div>
+                                                                        <p className="text-green-400 font-mono font-bold text-sm">{kw.conversions}</p>
+                                                                    </div>
+                                                                </div>
                                                             </div>
-                                                        )}
-                                                    </div>
-                                                ))
+
+                                                            {/* Search Terms - REDESIGNED */}
+                                                            {kw.isExpanded && kw.searchTerms && (
+                                                                <div className="mt-3 ml-4 space-y-2">
+                                                                    {kw.searchTerms.length > 0 ? (
+                                                                        kw.searchTerms.map(term => {
+                                                                            const termCostPercentage = kw.cost > 0 ? (term.cost / kw.cost) * 100 : 0;
+
+                                                                            return (
+                                                                                <div
+                                                                                    key={term.id}
+                                                                                    className="bg-white/[0.02] rounded-xl p-3 border border-white/5 hover:border-lime-500/20 transition-all"
+                                                                                >
+                                                                                    {/* Search Term Header */}
+                                                                                    <div className="flex items-center gap-2 mb-2">
+                                                                                        <Search size={12} className="text-lime-400/60" />
+                                                                                        <p className="text-gray-300 text-sm truncate flex-1">{term.text}</p>
+                                                                                    </div>
+
+                                                                                    {/* Mini Progress */}
+                                                                                    <div className="mb-3">
+                                                                                        <Progress value={termCostPercentage} variant="lime" size="sm" />
+                                                                                    </div>
+
+                                                                                    {/* Search Term Metrics */}
+                                                                                    <div className="grid grid-cols-4 gap-2">
+                                                                                        <div className="text-center">
+                                                                                            <p className="text-[9px] text-gray-600 uppercase mb-0.5">Custo</p>
+                                                                                            <p className="text-lime-400/80 font-mono text-xs">{formatCurrency(term.cost)}</p>
+                                                                                        </div>
+                                                                                        <div className="text-center">
+                                                                                            <p className="text-[9px] text-gray-600 uppercase mb-0.5">Impr.</p>
+                                                                                            <p className="text-gray-400 font-mono text-xs">{formatNumber(term.impressions)}</p>
+                                                                                        </div>
+                                                                                        <div className="text-center">
+                                                                                            <p className="text-[9px] text-gray-600 uppercase mb-0.5">Cliques</p>
+                                                                                            <p className="text-blue-400/80 font-mono text-xs">{term.clicks}</p>
+                                                                                        </div>
+                                                                                        <div className="text-center">
+                                                                                            <p className="text-[9px] text-gray-600 uppercase mb-0.5">Conv.</p>
+                                                                                            <p className="text-green-400/80 font-mono text-xs">{term.conversions}</p>
+                                                                                        </div>
+                                                                                    </div>
+                                                                                </div>
+                                                                            );
+                                                                        })
+                                                                    ) : (
+                                                                        <p className="px-6 py-2 text-gray-600 text-xs">Nenhum termo de pesquisa encontrado.</p>
+                                                                    )}
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    );
+                                                })
                                             ) : (
                                                 <p className="p-4 pl-8 text-gray-500 text-sm">Nenhuma palavra-chave encontrada.</p>
                                             )}
