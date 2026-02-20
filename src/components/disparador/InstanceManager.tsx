@@ -3,8 +3,9 @@ import { useDisparadorStore } from '@/store/disparadorStore';
 import { useClient } from '@/contexts/ClientContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Plus, Loader2, RefreshCw, AlertTriangle } from 'lucide-react';
+import { Plus, Loader2, RefreshCw, AlertTriangle, Upload } from 'lucide-react';
 import { InstanceCard } from './InstanceCard';
+import { ImportInstanceDialog } from './ImportInstanceDialog';
 import { toast } from 'sonner';
 
 export function InstanceManagerV2() {
@@ -13,6 +14,7 @@ export function InstanceManagerV2() {
     const { selectedClient } = useClient();
     const [newInstanceName, setNewInstanceName] = useState('');
     const [isCreating, setIsCreating] = useState(false);
+    const [showImportDialog, setShowImportDialog] = useState(false);
 
     useEffect(() => {
         if (selectedClient?.id) {
@@ -57,19 +59,35 @@ export function InstanceManagerV2() {
                             placeholder="Nome da Instância (ex: comercial)"
                             value={newInstanceName}
                             onChange={(e) => setNewInstanceName(e.target.value)}
-                            className="bg-[#1A1A1A] border-white/10 text-white"
+                            className="bg-[#1A1A1A] border-white/10 text-white flex-1"
                         />
                         <Button
                             onClick={handleCreate}
                             disabled={isCreating}
-                            className="bg-indigo-600 hover:bg-indigo-500 text-white min-w-[140px]"
+                            className="bg-indigo-600 hover:bg-indigo-500 text-white min-w-[120px]"
                         >
                             {isCreating ? <Loader2 className="animate-spin" /> : <Plus className="mr-2 h-4 w-4" />}
                             Criar
                         </Button>
+                        <Button
+                            onClick={() => setShowImportDialog(true)}
+                            variant="outline"
+                            className="border-white/10 text-gray-300 hover:text-white hover:bg-white/5 min-w-[160px]"
+                        >
+                            <Upload className="mr-2 h-4 w-4" />
+                            Importar
+                        </Button>
                     </div>
+                    <p className="text-xs text-gray-500 mt-2">
+                        Use <strong>Importar</strong> para instâncias que já existem na UazAPI (ex: conectadas ao agente de IA)
+                    </p>
                 </div>
             </div>
+
+            <ImportInstanceDialog
+                isOpen={showImportDialog}
+                onClose={() => setShowImportDialog(false)}
+            />
 
             <div className="flex items-center justify-between">
                 <h2 className="text-xl font-semibold text-white">Instâncias ({instances.length})</h2>

@@ -4,7 +4,7 @@ import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/componen
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
-import { Wifi, WifiOff, RefreshCw, Trash2, LogOut, Link as LinkIcon, Check } from 'lucide-react';
+import { Wifi, WifiOff, RefreshCw, Trash2, LogOut, Link as LinkIcon, Check, Upload } from 'lucide-react';
 import { useState } from 'react';
 import { QrDialog } from './QrDialog';
 
@@ -54,9 +54,17 @@ export function InstanceCard({ instance }: InstanceCardProps) {
         <>
             <Card className="bg-[#0A0A0A] border-white/10 text-white shadow-xl">
                 <CardHeader className="flex flex-row items-center justify-between pb-2">
-                    <CardTitle className="text-lg font-bold truncate pr-4" title={instance.instance_name}>
-                        {instance.instance_name}
-                    </CardTitle>
+                    <div className="flex items-center gap-2">
+                        <CardTitle className="text-lg font-bold truncate" title={instance.instance_name}>
+                            {instance.instance_name}
+                        </CardTitle>
+                        {instance.webhook_only && (
+                            <Badge className="bg-indigo-500/20 text-indigo-400 hover:bg-indigo-500/30 text-xs">
+                                <Upload className="w-3 h-3 mr-1" />
+                                Importada
+                            </Badge>
+                        )}
+                    </div>
                     <div className="flex items-center gap-2">
                         <Button
                             variant="ghost"
@@ -70,13 +78,10 @@ export function InstanceCard({ instance }: InstanceCardProps) {
                                 btn.classList.remove('animate-spin');
                                 if (res?.raw) {
                                     console.log('Raw Status Response:', res.raw);
-                                    // Show raw status for debugging
-                                    // toast.info(`Debug: ${JSON.stringify(res.source ? res.source : res.raw).substring(0, 100)}`);
                                 }
                                 if (res?.status === 'connected') {
                                     toast.success('Instância conectada!');
                                 } else {
-                                    // Make debug info very visible
                                     console.error("Status Check Failed/Disconnected", res);
                                     let rawStr = JSON.stringify(res?.raw || {});
                                     if (rawStr.length > 150) rawStr = rawStr.substring(0, 150) + '...';
@@ -119,21 +124,24 @@ export function InstanceCard({ instance }: InstanceCardProps) {
                     <Button variant="ghost" size="icon" onClick={handleShare} className="text-gray-500 hover:text-white hover:bg-white/10" title="Copiar Link de Conexão Rápida">
                         {justCopied ? <Check className="h-4 w-4 text-green-400" /> : <LinkIcon className="h-4 w-4" />}
                     </Button>
-                    {instance.status !== 'connected' && (
+
+                    {/* Botão Conectar - apenas para instâncias NÃO importadas */}
+                    {!instance.webhook_only && instance.status !== 'connected' && (
                         <Button variant="outline" size="sm" onClick={handleConnect} className="bg-transparent border-indigo-500/30 text-indigo-400 hover:bg-indigo-500/10 hover:text-indigo-300">
                             <RefreshCw className="mr-2 h-4 w-4" />
                             Conectar
                         </Button>
                     )}
 
-                    {instance.status === 'connected' && (
+                    {/* Botão Desconectar - para instâncias conectadas (não importadas) */}
+                    {!instance.webhook_only && instance.status === 'connected' && (
                         <Button variant="secondary" size="sm" onClick={handleDisconnect} className="bg-red-500/10 text-red-400 hover:bg-red-500/20">
                             <LogOut className="mr-2 h-4 w-4" />
                             Desconectar
                         </Button>
                     )}
 
-                    <Button variant="ghost" size="icon" onClick={handleDelete} className="text-gray-500 hover:text-red-400 hover:bg-transparent">
+                    <Button variant="ghost" size="icon" onClick={handleDelete} className="text-gray-500 hover:text-red-400 hover:bg-transparent" title={instance.webhook_only ? "Remover do sistema (não afeta a UazAPI)" : "Excluir instância"}>
                         <Trash2 className="h-4 w-4" />
                     </Button>
                 </CardFooter>

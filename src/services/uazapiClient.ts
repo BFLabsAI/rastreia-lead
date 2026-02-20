@@ -113,5 +113,24 @@ export const uazapiClient = {
             throw new Error(err.error || 'Failed to get status');
         }
         return response.json();
+    },
+
+    // Import Existing Instance (webhook-only mode)
+    importInstance: async (instanceName: string, instanceToken: string, clientId: string) => {
+        const response = await fetch(EDGE_FUNCTION_URL, {
+            method: 'POST',
+            headers: await getAuthHeaders(),
+            body: JSON.stringify({
+                action: 'import_instance',
+                instanceName,
+                instanceToken,
+                clientId
+            })
+        });
+        if (!response.ok) {
+            const err = await response.json();
+            throw new Error(err.error || 'Failed to import instance');
+        }
+        return response.json();
     }
 };
