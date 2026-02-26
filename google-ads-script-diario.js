@@ -201,7 +201,11 @@ function main() {
 
       var keywords = campaignMap[campaignId].adGroups[adGroupId].keywords;
       for (var k = 0; k < keywords.length; k++) {
-        if (keywords[k].keywordId === keywordIdClean || keywordIdClean === null) {
+        // FIX: Comparar como strings para evitar problema de tipo
+        var kwIdStr = String(keywords[k].keywordId);
+        var stKwIdStr = String(keywordIdClean);
+
+        if (kwIdStr === stKwIdStr || keywordIdClean === null) {
           keywords[k].searchTerms.push({
             term: row.searchTermView.searchTerm,
             keywordId: keywordIdClean,

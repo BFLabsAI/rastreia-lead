@@ -56,11 +56,12 @@ export function Dashboard() {
                     setMetaChartData(Object.values(byDate).map((v: any) => ({ val: v })));
                 }
 
-                // 2. Fetch Google Ads Total (aggregate all records)
+                // 2. Fetch Google Ads Total (only campaign level)
                 const { data: googleData, error: googleError } = await supabase
                     .from('relatorio_google_fact_search_term_performance')
                     .select('cost, date')
                     .eq('cliente_id', selectedClient.id)
+                    .is('ad_group_id', null)  // Only campaign level
                     .is('keyword_id', null)
                     .is('search_term_id', null)
                     .gte('date', startDateStr)

@@ -345,11 +345,17 @@ export function GoogleDetail() {
             const endDateStr = format(endOfDay(dateRange.endDate), 'yyyy-MM-dd');
 
             try {
+                // DEBUG: Log keyword ID
+                console.log('Loading search terms for keyword:', keywordId);
+
                 // Get Terms for this Keyword
                 const { data: dimTerms, error: dimError } = await supabase
                     .from('relatorio_google_dim_search_terms')
                     .select('id, search_term_text')
                     .eq('keyword_id', keywordId);
+
+                // DEBUG: Log results
+                console.log('Search terms found:', dimTerms);
 
                 if (dimError) throw dimError;
 
