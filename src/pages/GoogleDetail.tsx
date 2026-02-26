@@ -475,7 +475,21 @@ export function GoogleDetail() {
             {/* KPI Cards */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                 <div className="glass-card p-6 rounded-[2rem] flex flex-col justify-between h-40 relative overflow-hidden">
-                    <div className="absolute top-0 right-0 p-4 opacity-10"><MousePointer className="text-blue-400" size={64} /></div>
+                    <div className="absolute top-0 right-0 p-4 opacity-10">
+                        <div
+                            className="w-16 h-16 bg-[#CCFF00]"
+                            style={{
+                                maskImage: 'url(/cpc_medio-google.png)',
+                                WebkitMaskImage: 'url(/cpc_medio-google.png)',
+                                maskSize: 'contain',
+                                WebkitMaskSize: 'contain',
+                                maskRepeat: 'no-repeat',
+                                WebkitMaskRepeat: 'no-repeat',
+                                maskPosition: 'center',
+                                WebkitMaskPosition: 'center'
+                            }}
+                        />
+                    </div>
                     <div>
                         <p className="text-gray-400 text-xs font-bold uppercase tracking-wider">CPC Médio</p>
                         <p className="text-3xl font-bold text-white mt-2">
@@ -485,7 +499,21 @@ export function GoogleDetail() {
                 </div>
 
                 <div className="glass-card p-6 rounded-[2rem] flex flex-col justify-between h-40 relative overflow-hidden">
-                    <div className="absolute top-0 right-0 p-4 opacity-10"><Eye size={64} className="text-purple-400" /></div>
+                    <div className="absolute top-0 right-0 p-4 opacity-10">
+                        <div
+                            className="w-16 h-16 bg-[#CCFF00]"
+                            style={{
+                                maskImage: 'url(/ctr_global-google.png)',
+                                WebkitMaskImage: 'url(/ctr_global-google.png)',
+                                maskSize: 'contain',
+                                WebkitMaskSize: 'contain',
+                                maskRepeat: 'no-repeat',
+                                WebkitMaskRepeat: 'no-repeat',
+                                maskPosition: 'center',
+                                WebkitMaskPosition: 'center'
+                            }}
+                        />
+                    </div>
                     <div>
                         <p className="text-gray-400 text-xs font-bold uppercase tracking-wider">CTR Global</p>
                         <p className="text-3xl font-bold text-white mt-2">
@@ -495,7 +523,21 @@ export function GoogleDetail() {
                 </div>
 
                 <div className="glass-card p-6 rounded-[2rem] flex flex-col justify-between h-40 relative overflow-hidden">
-                    <div className="absolute top-0 right-0 p-4 opacity-10"><Target size={64} className="text-green-400" /></div>
+                    <div className="absolute top-0 right-0 p-4 opacity-10">
+                        <div
+                            className="w-16 h-16 bg-[#CCFF00]"
+                            style={{
+                                maskImage: 'url(/total_cliques-google.png)',
+                                WebkitMaskImage: 'url(/total_cliques-google.png)',
+                                maskSize: 'contain',
+                                WebkitMaskSize: 'contain',
+                                maskRepeat: 'no-repeat',
+                                WebkitMaskRepeat: 'no-repeat',
+                                maskPosition: 'center',
+                                WebkitMaskPosition: 'center'
+                            }}
+                        />
+                    </div>
                     <div>
                         <p className="text-gray-400 text-xs font-bold uppercase tracking-wider">Total Cliques</p>
                         <p className="text-3xl font-bold text-white mt-2">
@@ -505,7 +547,7 @@ export function GoogleDetail() {
                 </div>
 
                 <div className="glass-card p-6 rounded-[2rem] flex flex-col justify-between h-40 relative overflow-hidden">
-                    <div className="absolute top-0 right-0 p-4 opacity-10"><TrendingUp size={64} className="text-yellow-400" /></div>
+                    <div className="absolute top-0 right-0 p-4 opacity-10"><TrendingUp size={64} className="text-[#CCFF00]" /></div>
                     <div>
                         <p className="text-gray-400 text-xs font-bold uppercase tracking-wider">Conversões</p>
                         <p className="text-3xl font-bold text-white mt-2">
