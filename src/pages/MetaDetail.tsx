@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo } from 'react';
-import { Zap, Activity, Video, MessageCircle, TrendingUp, ChevronDown, ChevronRight, Eye, MousePointer, DollarSign, Target } from 'lucide-react';
+import { Activity, Video, TrendingUp, ChevronDown, ChevronRight, Eye, MousePointer, DollarSign, Target } from 'lucide-react';
 import { useDateRange } from '../contexts/DateContext';
 import { useClient } from '../contexts/ClientContext';
 import { supabase } from '../lib/supabase';

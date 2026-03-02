@@ -76,7 +76,7 @@ export const useDisparadorStore = create<DisparadorState>((set, get) => ({
     importInstance: async (name, token, clientId) => {
         set({ isLoading: true });
         try {
-            const result = await uazapiClient.importInstance(name, token, clientId);
+            await uazapiClient.importInstance(name, token, clientId);
             toast.success('Instância importada com sucesso! Webhooks configurados.');
             await get().loadInstances(clientId);
             return true;

@@ -13,7 +13,7 @@ interface ImportInstanceDialogProps {
 }
 
 export function ImportInstanceDialog({ isOpen, onClose }: ImportInstanceDialogProps) {
-    const { importInstance, isLoading } = useDisparadorStore();
+    const { importInstance } = useDisparadorStore();
     const { selectedClient } = useClient();
     const [instanceName, setInstanceName] = useState('');
     const [instanceToken, setInstanceToken] = useState('');
