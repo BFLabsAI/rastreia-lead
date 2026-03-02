@@ -50,18 +50,18 @@ export function ClientSelection({ onClientSelected }: ClientSelectionProps) {
     };
 
     return (
-        <div className="min-h-screen bg-[#050505] flex items-center justify-center p-8 relative overflow-hidden">
+        <div className="min-h-screen bg-background flex items-center justify-center p-8 relative overflow-hidden">
             {/* Background Effects */}
-            <div className="absolute top-20 left-20 w-96 h-96 bg-indigo-600/10 rounded-full blur-[120px]" />
-            <div className="absolute bottom-20 right-20 w-96 h-96 bg-cyan-600/10 rounded-full blur-[120px]" />
+            <div className="absolute top-20 left-20 w-96 h-96 bg-primary/10 rounded-full blur-[120px]" />
+            <div className="absolute bottom-20 right-20 w-96 h-96 bg-secondary/10 rounded-full blur-[120px]" />
 
             <div className="w-full max-w-4xl relative z-10">
                 {/* Logo & Title */}
                 <div className="text-center mb-12">
                     <div className="inline-flex items-center gap-3 mb-4">
-                        <img src="/logo.png" alt="LeadHub Logo" className="w-20 h-20 object-contain rounded-3xl shadow-lg shadow-indigo-500/30" />
+                        <img src="/logo.png" alt="Rastreia Lead Logo" className="w-20 h-20 object-contain rounded-3xl shadow-lg shadow-primary/30" />
                     </div>
-                    <h1 className="text-4xl font-bold text-white mb-2">LeadHub</h1>
+                    <h1 className="text-4xl font-bold text-white mb-2">Rastreia Lead</h1>
                     <p className="text-gray-400 text-lg">Dashboard</p>
                 </div>
 
@@ -75,7 +75,7 @@ export function ClientSelection({ onClientSelected }: ClientSelectionProps) {
                             {/* Clients Grid */}
                             {isLoading ? (
                                 <div className="text-center py-12">
-                                    <div className="w-12 h-12 border-4 border-indigo-500/30 border-t-indigo-500 rounded-full animate-spin mx-auto" />
+                                    <div className="w-12 h-12 border-4 border-primary/30 border-t-primary rounded-full animate-spin mx-auto" />
                                     <p className="text-gray-500 mt-4">Carregando clientes...</p>
                                 </div>
                             ) : clients.length > 0 ? (
@@ -84,21 +84,21 @@ export function ClientSelection({ onClientSelected }: ClientSelectionProps) {
                                         <button
                                             key={client.id}
                                             onClick={() => handleSelectClient(client.id)}
-                                            className="group p-6 rounded-2xl bg-white/5 border border-white/10 hover:border-indigo-500/50 hover:bg-white/10 transition-all text-left"
+                                            className="group p-6 rounded-2xl bg-white/5 border border-white/10 hover:border-primary/50 hover:bg-white/10 transition-all text-left"
                                         >
                                             <div className="flex items-center justify-between">
                                                 <div className="flex items-center gap-4">
-                                                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-bold shadow-lg shadow-indigo-500/20">
+                                                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center text-background font-bold shadow-lg shadow-primary/20">
                                                         {client.nome.substring(0, 2).toUpperCase()}
                                                     </div>
                                                     <div>
-                                                        <h3 className="text-white font-bold text-lg group-hover:text-indigo-400 transition-colors">
+                                                        <h3 className="text-white font-bold text-lg group-hover:text-primary transition-colors">
                                                             {client.nome}
                                                         </h3>
                                                         <p className="text-gray-500 text-sm">Cliente BF Labs</p>
                                                     </div>
                                                 </div>
-                                                <ArrowRight size={20} className="text-gray-600 group-hover:text-indigo-400 group-hover:translate-x-1 transition-all" />
+                                                <ArrowRight size={20} className="text-gray-600 group-hover:text-primary group-hover:translate-x-1 transition-all" />
                                             </div>
                                         </button>
                                     ))}
@@ -113,7 +113,7 @@ export function ClientSelection({ onClientSelected }: ClientSelectionProps) {
                             {/* New Client Button */}
                             <button
                                 onClick={() => setShowNewClientForm(true)}
-                                className="w-full p-4 rounded-2xl border-2 border-dashed border-white/20 hover:border-indigo-500/50 hover:bg-white/5 transition-all flex items-center justify-center gap-3 text-gray-400 hover:text-indigo-400 group"
+                                className="w-full p-4 rounded-2xl border-2 border-dashed border-white/20 hover:border-primary/50 hover:bg-white/5 transition-all flex items-center justify-center gap-3 text-gray-400 hover:text-primary group"
                             >
                                 <Plus size={20} className="group-hover:scale-110 transition-transform" />
                                 <span className="font-medium">Cadastrar Novo Cliente</span>
@@ -134,7 +134,7 @@ export function ClientSelection({ onClientSelected }: ClientSelectionProps) {
                                         value={newClientName}
                                         onChange={(e) => setNewClientName(e.target.value)}
                                         placeholder="Ex: Empresa XYZ"
-                                        className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-gray-500 focus:border-indigo-500/50 focus:bg-white/10 transition-all outline-none"
+                                        className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-gray-500 focus:border-primary/50 focus:bg-white/10 transition-all outline-none"
                                         disabled={isSaving}
                                         autoFocus
                                     />
@@ -154,12 +154,12 @@ export function ClientSelection({ onClientSelected }: ClientSelectionProps) {
                                     </button>
                                     <button
                                         type="submit"
-                                        className="flex-1 px-6 py-3 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-bold shadow-lg shadow-indigo-500/30 hover:shadow-indigo-500/50 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                                        className="flex-1 px-6 py-3 rounded-xl bg-primary hover:bg-primary/90 text-background font-bold shadow-lg shadow-primary/30 hover:shadow-primary/50 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                                         disabled={isSaving}
                                     >
                                         {isSaving ? (
                                             <>
-                                                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                                <div className="w-5 h-5 border-2 border-background/30 border-t-background rounded-full animate-spin" />
                                                 Salvando...
                                             </>
                                         ) : (
@@ -176,7 +176,7 @@ export function ClientSelection({ onClientSelected }: ClientSelectionProps) {
                 </div>
 
                 <p className="text-center text-gray-600 text-sm mt-8">
-                    © 2026 LeadHub Dashboard. Todos os direitos reservados.
+                    © 2026 Rastreia Lead Dashboard. Todos os direitos reservados.
                 </p>
             </div>
         </div>

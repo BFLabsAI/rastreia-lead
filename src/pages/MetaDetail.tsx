@@ -1,9 +1,10 @@
 import { useEffect, useState, useMemo } from 'react';
-import { Zap, Activity, Video, MessageCircle, TrendingUp, ChevronDown, ChevronRight } from 'lucide-react';
+import { Activity, Video, TrendingUp, ChevronDown, ChevronRight, Eye, MousePointer, DollarSign, Target } from 'lucide-react';
 import { useDateRange } from '../contexts/DateContext';
 import { useClient } from '../contexts/ClientContext';
 import { supabase } from '../lib/supabase';
 import { format, startOfDay, endOfDay } from 'date-fns';
+import { Progress } from '../components/ui/progress';
 
 interface Campaign {
     id: number;
@@ -322,7 +323,7 @@ export function MetaDetail() {
 
             <div>
                 <h2 className="text-3xl font-bold text-white tracking-tight flex items-center gap-3">
-                    <Zap className="text-cyan-400" size={32} />
+                    <img src="/icon-meta-ads.png" alt="Meta Ads" className="w-8 h-8 object-contain brightness-0 invert" />
                     Meta Ads
                 </h2>
                 <p className="text-gray-400 mt-1 text-sm">
@@ -333,22 +334,78 @@ export function MetaDetail() {
             {/* KPI Cards */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                 <div className="glass-card p-6 rounded-[2rem] h-40 flex flex-col justify-between relative overflow-hidden">
-                    <div className="absolute top-0 right-0 p-4 opacity-10"><Zap size={64} className="text-cyan-400" /></div>
+                    <div className="absolute top-0 right-0 p-4 opacity-10">
+                        <div
+                            className="w-16 h-16 bg-[#CCFF00]"
+                            style={{
+                                maskImage: 'url(/investimento-meta-ads.png)',
+                                WebkitMaskImage: 'url(/investimento-meta-ads.png)',
+                                maskSize: 'contain',
+                                WebkitMaskSize: 'contain',
+                                maskRepeat: 'no-repeat',
+                                WebkitMaskRepeat: 'no-repeat',
+                                maskPosition: 'center',
+                                WebkitMaskPosition: 'center'
+                            }}
+                        />
+                    </div>
                     <p className="text-gray-400 text-xs font-bold uppercase">Investimento</p>
                     <p className="text-3xl font-bold text-white">{isLoading ? '...' : formatCurrency(metrics.spend)}</p>
                 </div>
                 <div className="glass-card p-6 rounded-[2rem] h-40 flex flex-col justify-between relative overflow-hidden">
-                    <div className="absolute top-0 right-0 p-4 opacity-10"><Activity size={64} className="text-orange-400" /></div>
+                    <div className="absolute top-0 right-0 p-4 opacity-10">
+                        <div
+                            className="w-16 h-16 bg-[#CCFF00]"
+                            style={{
+                                maskImage: 'url(/total_cliques-google.png)',
+                                WebkitMaskImage: 'url(/total_cliques-google.png)',
+                                maskSize: 'contain',
+                                WebkitMaskSize: 'contain',
+                                maskRepeat: 'no-repeat',
+                                WebkitMaskRepeat: 'no-repeat',
+                                maskPosition: 'center',
+                                WebkitMaskPosition: 'center'
+                            }}
+                        />
+                    </div>
                     <p className="text-gray-400 text-xs font-bold uppercase">Cliques</p>
                     <p className="text-3xl font-bold text-white">{isLoading ? '...' : formatNumber(metrics.clicks)}</p>
                 </div>
                 <div className="glass-card p-6 rounded-[2rem] h-40 flex flex-col justify-between relative overflow-hidden">
-                    <div className="absolute top-0 right-0 p-4 opacity-10"><MessageCircle size={64} className="text-green-400" /></div>
+                    <div className="absolute top-0 right-0 p-4 opacity-10">
+                        <div
+                            className="w-16 h-16 bg-[#CCFF00]"
+                            style={{
+                                maskImage: 'url(/conversa-meta-ads.png)',
+                                WebkitMaskImage: 'url(/conversa-meta-ads.png)',
+                                maskSize: 'contain',
+                                WebkitMaskSize: 'contain',
+                                maskRepeat: 'no-repeat',
+                                WebkitMaskRepeat: 'no-repeat',
+                                maskPosition: 'center',
+                                WebkitMaskPosition: 'center'
+                            }}
+                        />
+                    </div>
                     <p className="text-gray-400 text-xs font-bold uppercase">Conversas</p>
                     <p className="text-3xl font-bold text-white">{isLoading ? '...' : formatNumber(metrics.conversations)}</p>
                 </div>
                 <div className="glass-card p-6 rounded-[2rem] h-40 flex flex-col justify-between relative overflow-hidden">
-                    <div className="absolute top-0 right-0 p-4 opacity-10"><TrendingUp size={64} className="text-blue-400" /></div>
+                    <div className="absolute top-0 right-0 p-4 opacity-10">
+                        <div
+                            className="w-16 h-16 bg-[#CCFF00]"
+                            style={{
+                                maskImage: 'url(/custo-conversa-meta-ads.png)',
+                                WebkitMaskImage: 'url(/custo-conversa-meta-ads.png)',
+                                maskSize: 'contain',
+                                WebkitMaskSize: 'contain',
+                                maskRepeat: 'no-repeat',
+                                WebkitMaskRepeat: 'no-repeat',
+                                maskPosition: 'center',
+                                WebkitMaskPosition: 'center'
+                            }}
+                        />
+                    </div>
                     <p className="text-gray-400 text-xs font-bold uppercase">Custo/Conversa</p>
                     <p className="text-3xl font-bold text-white">{isLoading ? '...' : formatCurrency(custoMensagem)}</p>
                 </div>
@@ -358,14 +415,14 @@ export function MetaDetail() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="glass-card p-6 rounded-[2rem]">
                     <div className="flex items-center gap-3 mb-2">
-                        <Video className="text-pink-400" size={24} />
+                        <Video className="text-[#CCFF00]" size={24} />
                         <p className="text-gray-400 text-xs font-bold uppercase">Video Views</p>
                     </div>
                     <p className="text-3xl font-bold text-white">{isLoading ? '...' : formatNumber(metrics.videoViews)}</p>
                 </div>
                 <div className="glass-card p-6 rounded-[2rem]">
                     <div className="flex items-center gap-3 mb-2">
-                        <Activity className="text-purple-400" size={24} />
+                        <Activity className="text-[#CCFF00]" size={24} />
                         <p className="text-gray-400 text-xs font-bold uppercase">Engajamentos</p>
                     </div>
                     <p className="text-3xl font-bold text-white">{isLoading ? '...' : formatNumber(metrics.engagements)}</p>
@@ -376,7 +433,7 @@ export function MetaDetail() {
             <div className="glass-card rounded-[2rem] overflow-hidden">
                 <div className="p-6 border-b border-white/5">
                     <h3 className="text-xl font-bold text-white flex items-center gap-3">
-                        <div className="w-2 h-8 bg-gradient-to-b from-cyan-400 to-blue-500 rounded-full" />
+                        <div className="w-2 h-8 bg-gradient-to-b from-lime-400 to-green-500 rounded-full" />
                         Campanhas
                     </h3>
                 </div>
@@ -406,61 +463,143 @@ export function MetaDetail() {
                                         <p className="text-white font-bold">{camp.name}</p>
                                     </div>
                                     <div className="flex gap-6 text-right overflow-x-auto no-scrollbar">
-                                        <div className="min-w-[80px]"><p className="text-[10px] text-gray-500 uppercase">Gasto</p><p className="text-cyan-400 font-mono font-bold text-sm">{formatCurrency(camp.spend)}</p></div>
+                                        <div className="min-w-[80px]"><p className="text-[10px] text-gray-500 uppercase">Gasto</p><p className="text-lime-400 font-mono font-bold text-sm">{formatCurrency(camp.spend)}</p></div>
                                         <div className="min-w-[80px]"><p className="text-[10px] text-gray-500 uppercase">Impr.</p><p className="text-gray-300 font-mono text-sm">{formatNumber(camp.impressions)}</p></div>
                                         <div className="min-w-[60px]"><p className="text-[10px] text-gray-500 uppercase">Clicks</p><p className="text-gray-300 font-mono text-sm">{camp.clicks}</p></div>
-                                        <div className="min-w-[60px]"><p className="text-[10px] text-gray-500 uppercase">CTR</p><p className="text-orange-400 font-mono text-sm">{camp.ctr.toFixed(2)}%</p></div>
-                                        <div className="min-w-[70px]"><p className="text-[10px] text-gray-500 uppercase">CPM</p><p className="text-purple-400 font-mono text-sm">R$ {camp.cpm.toFixed(2)}</p></div>
-                                        <div className="min-w-[70px]"><p className="text-[10px] text-gray-500 uppercase">Conv.</p><p className="text-green-400 font-mono text-sm">{camp.conversations}</p></div>
+                                        <div className="min-w-[60px]"><p className="text-[10px] text-gray-500 uppercase">CTR</p><p className="text-gray-300 font-mono text-sm">{camp.ctr.toFixed(2)}%</p></div>
+                                        <div className="min-w-[70px]"><p className="text-[10px] text-gray-500 uppercase">CPM</p><p className="text-gray-300 font-mono text-sm">R$ {camp.cpm.toFixed(2)}</p></div>
+                                        <div className="min-w-[70px]"><p className="text-[10px] text-gray-500 uppercase">Conv.</p><p className="text-gray-300 font-mono text-sm">{camp.conversations}</p></div>
                                     </div>
                                 </div>
 
-                                {/* AdSets */}
+                                {/* AdSets - REDESIGNED WITH CARDS */}
                                 {camp.isExpanded && camp.adsets && (
-                                    <div className="bg-white/[0.01] border-l-2 border-cyan-500/30 ml-6">
-                                        {camp.adsets.map(adset => (
-                                            <div key={adset.id}>
-                                                <div className="p-3 pl-6 hover:bg-white/[0.02] cursor-pointer flex items-center gap-4" onClick={() => toggleAdset(camp.id, adset.id)}>
-                                                    <div className="w-5">
-                                                        {loadingAds === adset.id ? (
-                                                            <div className="w-3 h-3 border-2 border-blue-500/30 border-t-blue-500 rounded-full animate-spin" />
-                                                        ) : adset.isExpanded ? (
-                                                            <ChevronDown className="text-blue-400" size={16} />
-                                                        ) : (
-                                                            <ChevronRight className="text-gray-600" size={16} />
-                                                        )}
-                                                    </div>
-                                                    <div className="flex-1"><p className="text-gray-300 text-sm font-medium">{adset.name}</p></div>
-                                                    <div className="flex gap-5 text-right overflow-x-auto no-scrollbar">
-                                                        <div className="min-w-[70px]"><p className="text-[10px] text-gray-600 uppercase">Gasto</p><p className="text-cyan-400/80 font-mono text-xs">{formatCurrency(adset.spend)}</p></div>
-                                                        <div className="min-w-[70px]"><p className="text-[10px] text-gray-600 uppercase">Impr.</p><p className="text-gray-400 font-mono text-xs">{formatNumber(adset.impressions)}</p></div>
-                                                        <div className="min-w-[50px]"><p className="text-[10px] text-gray-600 uppercase">Clicks</p><p className="text-gray-400 font-mono text-xs">{adset.clicks}</p></div>
-                                                        <div className="min-w-[50px]"><p className="text-[10px] text-gray-600 uppercase">CTR</p><p className="text-orange-400/80 font-mono text-xs">{adset.ctr.toFixed(2)}%</p></div>
-                                                        <div className="min-w-[60px]"><p className="text-[10px] text-gray-600 uppercase">CPM</p><p className="text-purple-400/80 font-mono text-xs">R${adset.cpm.toFixed(2)}</p></div>
-                                                        <div className="min-w-[60px]"><p className="text-[10px] text-gray-600 uppercase">Conv.</p><p className="text-green-400/80 font-mono text-xs">{adset.conversations}</p></div>
-                                                    </div>
-                                                </div>
+                                    <div className="p-4 bg-white/[0.01] border-l-2 border-cyan-500/30 ml-6 space-y-3">
+                                        {camp.adsets.map(adset => {
+                                            const spendPercentage = camp.spend > 0 ? (adset.spend / camp.spend) * 100 : 0;
 
-                                                {/* Ads */}
-                                                {adset.isExpanded && adset.ads && (
-                                                    <div className="bg-white/[0.01] border-l-2 border-blue-500/20 ml-10 py-2">
-                                                        {adset.ads.map(ad => (
-                                                            <div key={ad.id} className="px-6 py-2 flex items-center gap-4">
-                                                                <p className="flex-1 text-gray-400 text-xs truncate">{ad.name}</p>
-                                                                <div className="flex gap-4 text-right">
-                                                                    <div className="min-w-[60px]"><p className="text-[9px] text-gray-600 uppercase">Gasto</p><p className="text-cyan-400/60 font-mono text-[10px]">{formatCurrency(ad.spend)}</p></div>
-                                                                    <div className="min-w-[60px]"><p className="text-[9px] text-gray-600 uppercase">Impr.</p><p className="text-gray-500 font-mono text-[10px]">{formatNumber(ad.impressions)}</p></div>
-                                                                    <div className="min-w-[40px]"><p className="text-[9px] text-gray-600 uppercase">Clicks</p><p className="text-gray-500 font-mono text-[10px]">{ad.clicks}</p></div>
-                                                                    <div className="min-w-[40px]"><p className="text-[9px] text-gray-600 uppercase">CTR</p><p className="text-orange-400/60 font-mono text-[10px]">{ad.ctr.toFixed(2)}%</p></div>
-                                                                    <div className="min-w-[50px]"><p className="text-[9px] text-gray-600 uppercase">CPM</p><p className="text-purple-400/60 font-mono text-[10px]">R${ad.cpm.toFixed(2)}</p></div>
-                                                                    <div className="min-w-[50px]"><p className="text-[9px] text-gray-600 uppercase">Conv.</p><p className="text-green-400/60 font-mono text-[10px]">{ad.conversations}</p></div>
+                                            return (
+                                                <div key={adset.id}>
+                                                    {/* AdSet Card */}
+                                                    <div
+                                                        className="bg-white/[0.03] rounded-2xl p-4 border border-white/5 hover:border-cyan-500/30 transition-all cursor-pointer"
+                                                        onClick={() => toggleAdset(camp.id, adset.id)}
+                                                    >
+                                                        {/* Header */}
+                                                        <div className="flex items-center justify-between mb-3">
+                                                            <div className="flex items-center gap-3">
+                                                                <div className="w-6 h-6 rounded-lg bg-cyan-500/10 flex items-center justify-center">
+                                                                    {loadingAds === adset.id ? (
+                                                                        <div className="w-3 h-3 border-2 border-cyan-500/30 border-t-cyan-500 rounded-full animate-spin" />
+                                                                    ) : adset.isExpanded ? (
+                                                                        <ChevronDown className="text-cyan-400" size={14} />
+                                                                    ) : (
+                                                                        <ChevronRight className="text-cyan-400" size={14} />
+                                                                    )}
                                                                 </div>
+                                                                <p className="text-white font-medium">{adset.name}</p>
                                                             </div>
-                                                        ))}
+                                                        </div>
+
+                                                        {/* Progress Bar */}
+                                                        <div className="mb-4">
+                                                            <div className="flex justify-between text-xs text-gray-500 mb-1">
+                                                                <span>Proporção do Gasto</span>
+                                                                <span className="text-lime-400 font-mono">{formatCurrency(adset.spend)} / {formatCurrency(camp.spend)}</span>
+                                                            </div>
+                                                            <Progress value={spendPercentage} variant="cyan" size="md" />
+                                                        </div>
+
+                                                        {/* Metrics Badges */}
+                                                        <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
+                                                            <div className="bg-cyan-500/10 rounded-xl p-2.5 text-center">
+                                                                <div className="flex items-center justify-center gap-1.5 mb-1">
+                                                                    <DollarSign size={12} className="text-cyan-400" />
+                                                                    <span className="text-[10px] text-gray-500 uppercase">Gasto</span>
+                                                                </div>
+                                                                <p className="text-lime-400 font-mono font-bold text-sm">{formatCurrency(adset.spend)}</p>
+                                                            </div>
+                                                            <div className="bg-gray-500/10 rounded-xl p-2.5 text-center">
+                                                                <div className="flex items-center justify-center gap-1.5 mb-1">
+                                                                    <Eye size={12} className="text-gray-400" />
+                                                                    <span className="text-[10px] text-gray-500 uppercase">Impr.</span>
+                                                                </div>
+                                                                <p className="text-gray-300 font-mono font-bold text-sm">{formatNumber(adset.impressions)}</p>
+                                                            </div>
+                                                            <div className="bg-blue-500/10 rounded-xl p-2.5 text-center">
+                                                                <div className="flex items-center justify-center gap-1.5 mb-1">
+                                                                    <MousePointer size={12} className="text-blue-400" />
+                                                                    <span className="text-[10px] text-gray-500 uppercase">Clicks</span>
+                                                                </div>
+                                                                <p className="text-blue-400 font-mono font-bold text-sm">{adset.clicks}</p>
+                                                            </div>
+                                                            <div className="bg-gray-500/10 rounded-xl p-2.5 text-center">
+                                                                <div className="flex items-center justify-center gap-1.5 mb-1">
+                                                                    <TrendingUp size={12} className="text-gray-400" />
+                                                                    <span className="text-[10px] text-gray-500 uppercase">CTR</span>
+                                                                </div>
+                                                                <p className="text-gray-300 font-mono font-bold text-sm">{adset.ctr.toFixed(2)}%</p>
+                                                            </div>
+                                                            <div className="bg-gray-500/10 rounded-xl p-2.5 text-center">
+                                                                <div className="flex items-center justify-center gap-1.5 mb-1">
+                                                                    <Target size={12} className="text-gray-400" />
+                                                                    <span className="text-[10px] text-gray-500 uppercase">Conv.</span>
+                                                                </div>
+                                                                <p className="text-gray-300 font-mono font-bold text-sm">{adset.conversations}</p>
+                                                            </div>
+                                                        </div>
                                                     </div>
-                                                )}
-                                            </div>
-                                        ))}
+
+                                                    {/* Ads - REDESIGNED */}
+                                                    {adset.isExpanded && adset.ads && (
+                                                        <div className="mt-3 ml-4 space-y-2">
+                                                            {adset.ads.map(ad => {
+                                                                const adSpendPercentage = adset.spend > 0 ? (ad.spend / adset.spend) * 100 : 0;
+
+                                                                return (
+                                                                    <div
+                                                                        key={ad.id}
+                                                                        className="bg-white/[0.02] rounded-xl p-3 border border-white/5 hover:border-blue-500/20 transition-all"
+                                                                    >
+                                                                        {/* Ad Name */}
+                                                                        <p className="text-gray-300 text-sm font-medium mb-2 truncate">{ad.name}</p>
+
+                                                                        {/* Mini Progress */}
+                                                                        <div className="mb-3">
+                                                                            <Progress value={adSpendPercentage} variant="blue" size="sm" />
+                                                                        </div>
+
+                                                                        {/* Ad Metrics */}
+                                                                        <div className="grid grid-cols-5 gap-2">
+                                                                            <div className="text-center">
+                                                                                <p className="text-[9px] text-gray-600 uppercase mb-0.5">Gasto</p>
+                                                                                <p className="text-lime-400/80 font-mono text-xs">{formatCurrency(ad.spend)}</p>
+                                                                            </div>
+                                                                            <div className="text-center">
+                                                                                <p className="text-[9px] text-gray-600 uppercase mb-0.5">Impr.</p>
+                                                                                <p className="text-gray-400 font-mono text-xs">{formatNumber(ad.impressions)}</p>
+                                                                            </div>
+                                                                            <div className="text-center">
+                                                                                <p className="text-[9px] text-gray-600 uppercase mb-0.5">Clicks</p>
+                                                                                <p className="text-blue-400/80 font-mono text-xs">{ad.clicks}</p>
+                                                                            </div>
+                                                                            <div className="text-center">
+                                                                                <p className="text-[9px] text-gray-600 uppercase mb-0.5">CTR</p>
+                                                                                <p className="text-gray-400 font-mono text-xs">{ad.ctr.toFixed(2)}%</p>
+                                                                            </div>
+                                                                            <div className="text-center">
+                                                                                <p className="text-[9px] text-gray-600 uppercase mb-0.5">Conv.</p>
+                                                                                <p className="text-gray-400 font-mono text-xs">{ad.conversations}</p>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                );
+                                                            })}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            );
+                                        })}
                                     </div>
                                 )}
                             </div>

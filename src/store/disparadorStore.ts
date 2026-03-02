@@ -10,6 +10,8 @@ export interface Instance {
     qrcode?: string;
     client_id?: string;
     share_token?: string;
+    webhook_only?: boolean;
+    metadata?: Record<string, any>;
 }
 
 interface DisparadorState {
@@ -19,6 +21,7 @@ interface DisparadorState {
     // Actions
     loadInstances: (clientId?: string) => Promise<void>;
     createInstance: (name: string, clientId: string) => Promise<void>;
+    importInstance: (name: string, token: string, clientId: string) => Promise<boolean>;
     deleteInstance: (name: string) => Promise<void>;
     disconnectInstance: (name: string) => Promise<void>;
     getQrCode: (name: string) => Promise<{ qrcode: string; qrcode_generated_at?: string } | null>;
@@ -65,6 +68,22 @@ export const useDisparadorStore = create<DisparadorState>((set, get) => ({
         } catch (error: any) {
             console.error('Error creating instance:', error);
             toast.error(`Erro ao criar instância: ${error.message}`);
+        } finally {
+            set({ isLoading: false });
+        }
+    },
+
+    importInstance: async (name, token, clientId) => {
+        set({ isLoading: true });
+        try {
+            await uazapiClient.importInstance(name, token, clientId);
+            toast.success('Instância importada com sucesso! Webhooks configurados.');
+            await get().loadInstances(clientId);
+            return true;
+        } catch (error: any) {
+            console.error('Error importing instance:', error);
+            toast.error(`Erro ao importar instância: ${error.message}`);
+            return false;
         } finally {
             set({ isLoading: false });
         }

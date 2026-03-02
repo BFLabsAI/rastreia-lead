@@ -163,7 +163,7 @@ export function InstanceConnection() {
     if (loading) {
         return (
             <div className="min-h-screen bg-black flex items-center justify-center text-white">
-                <Loader2 className="animate-spin w-8 h-8 text-indigo-500" />
+                <Loader2 className="animate-spin w-8 h-8 text-primary" />
             </div>
         );
     }
@@ -189,14 +189,14 @@ export function InstanceConnection() {
 
     return (
         <div className="min-h-screen bg-black flex flex-col items-center justify-center p-4 relative overflow-hidden">
-            <div className="absolute inset-0 bg-indigo-500/5 blur-[100px]" />
+            <div className="absolute inset-0 bg-primary/5 blur-[100px]" />
 
             <Toaster theme="dark" position="top-center" />
 
             <div className="w-full max-w-md relative z-10 space-y-6">
 
                 <div className="text-center space-y-2">
-                    <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-indigo-500/20 text-indigo-400 mb-4 ring-1 ring-inset ring-indigo-500/30">
+                    <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-primary/20 text-primary mb-4 ring-1 ring-inset ring-primary/30">
                         <Wifi size={24} />
                     </div>
                     <h1 className="text-2xl font-bold text-white tracking-tight">Conexão Rápida</h1>
@@ -289,7 +289,7 @@ export function InstanceConnection() {
                             !qrCode ? (
                                 <Button
                                     size="lg"
-                                    className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-medium h-12"
+                                    className="w-full bg-primary hover:bg-primary/90 text-background font-medium h-12"
                                     onClick={handleGenerateQr}
                                     disabled={generatingQr}
                                 >

@@ -46,7 +46,7 @@ export function NewLeadModal({ isOpen, onClose, onSave }: NewLeadModalProps) {
                             required
                             type="text"
                             placeholder="Nome do cliente"
-                            className="w-full bg-black/20 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-purple-500 transition-colors"
+                            className="w-full bg-black/20 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-primary transition-colors"
                             value={formData.nome}
                             onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
                         />
@@ -60,7 +60,7 @@ export function NewLeadModal({ isOpen, onClose, onSave }: NewLeadModalProps) {
                             required
                             type="tel"
                             placeholder="(11) 99999-9999"
-                            className="w-full bg-black/20 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-purple-500 transition-colors"
+                            className="w-full bg-black/20 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-primary transition-colors"
                             value={formData.telefone}
                             onChange={(e) => setFormData({ ...formData, telefone: e.target.value })}
                         />
@@ -75,7 +75,7 @@ export function NewLeadModal({ isOpen, onClose, onSave }: NewLeadModalProps) {
                                     type="button"
                                     onClick={() => setFormData({ ...formData, origem })}
                                     className={`px-4 py-2 rounded-lg text-sm border font-medium transition-all ${formData.origem === origem
-                                            ? 'bg-purple-500/20 border-purple-500 text-purple-300'
+                                            ? 'bg-primary/20 border-primary text-primary'
                                             : 'bg-black/20 border-white/5 text-gray-400 hover:bg-white/5'
                                         }`}
                                 >
@@ -92,7 +92,7 @@ export function NewLeadModal({ isOpen, onClose, onSave }: NewLeadModalProps) {
                         <textarea
                             rows={3}
                             placeholder="Detalhes sobre o interesse..."
-                            className="w-full bg-black/20 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-purple-500 transition-colors resize-none"
+                            className="w-full bg-black/20 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-primary transition-colors resize-none"
                             value={formData.observacao}
                             onChange={(e) => setFormData({ ...formData, observacao: e.target.value })}
                         />
@@ -100,7 +100,7 @@ export function NewLeadModal({ isOpen, onClose, onSave }: NewLeadModalProps) {
 
                     <button
                         type="submit"
-                        className="w-full mt-4 bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-bold py-3 rounded-xl shadow-lg shadow-purple-500/20 hover:shadow-purple-500/40 hover:scale-[1.02] transition-all active:scale-95 flex items-center justify-center gap-2"
+                        className="w-full mt-4 bg-primary hover:bg-primary/90 text-background font-bold py-3 rounded-xl shadow-lg shadow-primary/30 hover:shadow-primary/50 hover:scale-[1.02] transition-all active:scale-95 flex items-center justify-center gap-2"
                     >
                         <Save size={18} />
                         Salvar Lead

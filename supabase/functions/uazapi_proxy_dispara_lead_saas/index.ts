@@ -22,7 +22,7 @@ serve(async (req) => {
         }
 
         const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
-        const { action, instanceId, clientId, instanceName } = await req.json();
+        const { action, instanceId, clientId, instanceName, instanceToken } = await req.json();
 
         // -------------------------
         // ACTION: CREATE INSTANCE
@@ -95,7 +95,7 @@ serve(async (req) => {
             else console.log("Supabase webhook set successfully");
 
             // Webhook 2: n8n (Standard/Leads)
-            const n8nWebhookUrl = "https://webhook.bflabs.com.br/webhook/cadastro-leads-relatorio-trafego";
+            const n8nWebhookUrl = "https://n8n-new.bflabs.com.br/webhook/cadastro-leads-relatorio-trafego";
             console.log(`Setting up n8n webhook for instance ${instanceId} at ${n8nWebhookUrl}`);
 
             const webhook2 = await fetch(`${UAZAPI_BASE_URL}/webhook`, {
@@ -468,6 +468,133 @@ serve(async (req) => {
             }).eq('instance_name', instanceName);
 
             return new Response(JSON.stringify({ status: dbStatus, raw: data }), {
+                headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            });
+        }
+
+        // -------------------------
+        // ACTION: IMPORT INSTANCE
+        // -------------------------
+        if (action === 'import_instance') {
+            if (!instanceName || !instanceToken || !clientId) {
+                throw new Error("Missing instanceName, instanceToken, or clientId");
+            }
+
+            console.log(`Importing existing instance: ${instanceName} for client: ${clientId}`);
+
+            // 1. Check if instance already exists in our DB
+            const { data: existingInstance } = await supabase
+                .from('instances_clientes_bf_labs')
+                .select('id')
+                .eq('instance_name', instanceName)
+                .single();
+
+            if (existingInstance) {
+                throw new Error("Instance already exists in the system");
+            }
+
+            // 2. Verify instance exists in UazAPI by checking status
+            const statusResponse = await fetch(`${UAZAPI_BASE_URL}/instance/status`, {
+                method: 'GET',
+                headers: {
+                    'token': instanceToken,
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (!statusResponse.ok) {
+                // Try connectionState as fallback
+                const fallbackResponse = await fetch(`${UAZAPI_BASE_URL}/instance/connectionState`, {
+                    method: 'GET',
+                    headers: { 'token': instanceToken }
+                });
+
+                if (!fallbackResponse.ok) {
+                    throw new Error("Invalid instance token or instance not found in UazAPI");
+                }
+            }
+
+            // 3. Create record in DB with webhook_only=true
+            const { data: newInstance, error: dbError } = await supabase
+                .from('instances_clientes_bf_labs')
+                .insert({
+                    id: crypto.randomUUID(),
+                    client_id: clientId,
+                    instance_name: instanceName,
+                    token: instanceToken,
+                    status: 'connected',
+                    webhook_only: true,
+                    metadata: { imported_manually: true, imported_at: new Date().toISOString() }
+                })
+                .select()
+                .single();
+
+            if (dbError) {
+                console.error("Database error:", dbError);
+                throw new Error(`Failed to create instance record: ${dbError.message}`);
+            }
+
+            // 4. Register webhooks in UazAPI
+
+            // Webhook 1: Connection status
+            const connectionWebhookUrl = `${SUPABASE_URL}/functions/v1/relatorios_clientes_bf`;
+            console.log(`Setting up connection webhook for imported instance ${instanceName}`);
+
+            const webhook1 = await fetch(`${UAZAPI_BASE_URL}/webhook`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'token': instanceToken
+                },
+                body: JSON.stringify({
+                    action: 'add',
+                    enabled: true,
+                    url: connectionWebhookUrl,
+                    events: ['connection'],
+                    webhookByEvents: true,
+                })
+            });
+            if (!webhook1.ok) {
+                console.error("Failed to set connection webhook:", await webhook1.text());
+            } else {
+                console.log("Connection webhook set successfully");
+            }
+
+            // Webhook 2: Messages (for leads)
+            const n8nWebhookUrl = "https://n8n-new.bflabs.com.br/webhook/cadastro-leads-relatorio-trafego";
+            console.log(`Setting up messages webhook for imported instance ${instanceName}`);
+
+            const webhook2 = await fetch(`${UAZAPI_BASE_URL}/webhook`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'token': instanceToken
+                },
+                body: JSON.stringify({
+                    action: 'add',
+                    enabled: true,
+                    url: n8nWebhookUrl,
+                    events: ['messages'],
+                    excludeMessages: ['isGroupYes'],
+                    webhookByEvents: true,
+                })
+            });
+            if (!webhook2.ok) {
+                console.error("Failed to set messages webhook:", await webhook2.text());
+            } else {
+                console.log("Messages webhook set successfully");
+            }
+
+            console.log(`Instance ${instanceName} imported successfully`);
+
+            return new Response(JSON.stringify({
+                success: true,
+                instance: newInstance,
+                webhooks: {
+                    connection: webhook1.ok,
+                    messages: webhook2.ok
+                }
+            }), {
                 headers: { ...corsHeaders, 'Content-Type': 'application/json' },
             });
         }

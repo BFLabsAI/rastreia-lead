@@ -139,7 +139,7 @@ export function CreateClient() {
 
             <div className="bg-[#0A0A0A] border border-white/5 rounded-3xl p-8 shadow-2xl">
                 <div className="flex items-center gap-4 mb-8">
-                    <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg shadow-indigo-500/30">
+                    <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center shadow-lg shadow-primary/30">
                         <Building2 size={32} className="text-white" />
                     </div>
                     <div>
@@ -162,7 +162,7 @@ export function CreateClient() {
                                     value={newClientName}
                                     onChange={(e) => setNewClientName(e.target.value)}
                                     placeholder="Ex: Empresa XYZ"
-                                    className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-gray-500 focus:border-indigo-500/50 focus:bg-white/10 transition-all outline-none"
+                                    className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-gray-500 focus:border-primary/50 focus:bg-white/10 transition-all outline-none"
                                     disabled={isSaving}
                                     autoFocus
                                 />
@@ -199,7 +199,7 @@ export function CreateClient() {
                                     value={instancia}
                                     onChange={(e) => setInstancia(e.target.value)}
                                     placeholder="Ex: instancia_01"
-                                    className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-gray-500 focus:border-indigo-500/50 focus:bg-white/10 transition-all outline-none"
+                                    className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-gray-500 focus:border-primary/50 focus:bg-white/10 transition-all outline-none"
                                     disabled={isSaving}
                                 />
                             </div>
@@ -219,7 +219,7 @@ export function CreateClient() {
                                     value={metaAccountId}
                                     onChange={(e) => setMetaAccountId(e.target.value)}
                                     placeholder="Ex: 1234567890"
-                                    className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-gray-500 focus:border-indigo-500/50 focus:bg-white/10 transition-all outline-none"
+                                    className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-gray-500 focus:border-primary/50 focus:bg-white/10 transition-all outline-none"
                                     disabled={isSaving}
                                 />
                             </div>
@@ -233,7 +233,7 @@ export function CreateClient() {
                                     value={googleAccountId}
                                     onChange={(e) => setGoogleAccountId(e.target.value)}
                                     placeholder="Ex: 123-456-7890"
-                                    className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-gray-500 focus:border-indigo-500/50 focus:bg-white/10 transition-all outline-none"
+                                    className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-gray-500 focus:border-primary/50 focus:bg-white/10 transition-all outline-none"
                                     disabled={isSaving}
                                 />
                             </div>
@@ -254,7 +254,7 @@ export function CreateClient() {
                                         value={currentPhrase}
                                         onChange={(e) => setCurrentPhrase(e.target.value)}
                                         placeholder="Ex: Olá, vim pelo Instagram"
-                                        className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-gray-500 focus:border-indigo-500/50 focus:bg-white/10 transition-all outline-none"
+                                        className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-gray-500 focus:border-primary/50 focus:bg-white/10 transition-all outline-none"
                                         disabled={isSaving}
                                     />
                                 </div>
@@ -267,7 +267,7 @@ export function CreateClient() {
                                         value={currentOrigin}
                                         onChange={(e) => setCurrentOrigin(e.target.value)}
                                         placeholder="Ex: Instagram"
-                                        className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-gray-500 focus:border-indigo-500/50 focus:bg-white/10 transition-all outline-none"
+                                        className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-gray-500 focus:border-primary/50 focus:bg-white/10 transition-all outline-none"
                                         disabled={isSaving}
                                     />
                                 </div>
@@ -275,7 +275,7 @@ export function CreateClient() {
                                     type="button"
                                     onClick={handleAddPhrase}
                                     disabled={isSaving}
-                                    className="p-3 rounded-xl bg-indigo-500/20 text-indigo-400 hover:bg-indigo-500 hover:text-white transition-colors border border-indigo-500/30"
+                                    className="p-3 rounded-xl bg-primary/20 text-primary hover:bg-primary hover:text-background transition-colors border border-primary/30"
                                 >
                                     <Plus size={24} />
                                 </button>
@@ -287,7 +287,7 @@ export function CreateClient() {
                                     {phrases.map((item, index) => (
                                         <div key={index} className="flex items-center justify-between p-3 bg-white/5 rounded-xl border border-white/10">
                                             <div className="flex items-center gap-4">
-                                                <div className="px-3 py-1 rounded-lg bg-indigo-500/20 text-indigo-400 text-sm font-medium">
+                                                <div className="px-3 py-1 rounded-lg bg-primary/20 text-primary text-sm font-medium">
                                                     {item.origem}
                                                 </div>
                                                 <span className="text-gray-300">{item.frase}</span>
@@ -342,7 +342,7 @@ export function CreateClient() {
                                 <button
                                     type="button"
                                     onClick={() => setEnviarRelatorioMeta(!enviarRelatorioMeta)}
-                                    className={`w-full py-2 rounded-lg text-sm font-bold transition-all ${enviarRelatorioMeta ? 'bg-indigo-500 text-white shadow-lg shadow-indigo-500/20' : 'bg-gray-700 text-gray-400 hover:bg-gray-600'}`}
+                                    className={`w-full py-2 rounded-lg text-sm font-bold transition-all ${enviarRelatorioMeta ? 'bg-primary text-background shadow-lg shadow-primary/20' : 'bg-gray-700 text-gray-400 hover:bg-gray-600'}`}
                                 >
                                     {enviarRelatorioMeta ? 'SIM' : 'NÃO'}
                                 </button>
@@ -354,7 +354,7 @@ export function CreateClient() {
                                 <button
                                     type="button"
                                     onClick={() => setChecarSaldoMeta(!checarSaldoMeta)}
-                                    className={`w-full py-2 rounded-lg text-sm font-bold transition-all ${checarSaldoMeta ? 'bg-indigo-500 text-white shadow-lg shadow-indigo-500/20' : 'bg-gray-700 text-gray-400 hover:bg-gray-600'}`}
+                                    className={`w-full py-2 rounded-lg text-sm font-bold transition-all ${checarSaldoMeta ? 'bg-primary text-background shadow-lg shadow-primary/20' : 'bg-gray-700 text-gray-400 hover:bg-gray-600'}`}
                                 >
                                     {checarSaldoMeta ? 'SIM' : 'NÃO'}
                                 </button>
@@ -366,7 +366,7 @@ export function CreateClient() {
                                 <button
                                     type="button"
                                     onClick={() => setEnviarRelatorioGoogle(!enviarRelatorioGoogle)}
-                                    className={`w-full py-2 rounded-lg text-sm font-bold transition-all ${enviarRelatorioGoogle ? 'bg-indigo-500 text-white shadow-lg shadow-indigo-500/20' : 'bg-gray-700 text-gray-400 hover:bg-gray-600'}`}
+                                    className={`w-full py-2 rounded-lg text-sm font-bold transition-all ${enviarRelatorioGoogle ? 'bg-primary text-background shadow-lg shadow-primary/20' : 'bg-gray-700 text-gray-400 hover:bg-gray-600'}`}
                                 >
                                     {enviarRelatorioGoogle ? 'SIM' : 'NÃO'}
                                 </button>
@@ -386,7 +386,7 @@ export function CreateClient() {
                                 <select
                                     value={tipoPagamento}
                                     onChange={(e) => setTipoPagamento(e.target.value)}
-                                    className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white focus:border-indigo-500/50 focus:bg-white/10 transition-all outline-none appearance-none"
+                                    className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white focus:border-primary/50 focus:bg-white/10 transition-all outline-none appearance-none"
                                     disabled={isSaving}
                                 >
                                     <option value="Cartão" className="bg-[#0A0A0A]">Cartão de Crédito</option>
@@ -406,7 +406,7 @@ export function CreateClient() {
                                         onChange={(e) => setValorBase(e.target.value)}
                                         placeholder="0,00"
                                         step="0.01"
-                                        className="w-full pl-10 pr-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-gray-500 focus:border-indigo-500/50 focus:bg-white/10 transition-all outline-none"
+                                        className="w-full pl-10 pr-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-gray-500 focus:border-primary/50 focus:bg-white/10 transition-all outline-none"
                                         disabled={isSaving}
                                     />
                                 </div>
@@ -425,7 +425,7 @@ export function CreateClient() {
                         </button>
                         <button
                             type="submit"
-                            className="flex-1 px-6 py-3 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-bold shadow-lg shadow-indigo-500/30 hover:shadow-indigo-500/50 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="flex-1 px-6 py-3 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-bold shadow-lg shadow-primary/30 hover:shadow-indigo-500/50 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                             disabled={isSaving}
                         >
                             {isSaving ? (

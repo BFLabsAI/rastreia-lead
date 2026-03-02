@@ -34,12 +34,8 @@ export function Sidebar({ }: SidebarProps) {
             <div className="h-full bg-[#0A0A0A]/80 backdrop-blur-xl border border-white/5 rounded-2xl flex flex-col shadow-2xl">
 
                 {/* Logo Area */}
-                <div className="p-6 flex items-center gap-3 border-b border-white/5">
-                    <img src="/logo.png" alt="LeadHub Logo" className="w-10 h-10 object-contain rounded-lg" />
-                    <div>
-                        <h1 className="text-xl font-bold text-white tracking-wide">LeadHub</h1>
-                        <p className="text-[10px] text-gray-400 font-medium tracking-wider uppercase">Dashboard</p>
-                    </div>
+                <div className="p-6 flex items-center justify-center border-b border-white/5">
+                    <img src="/logo-rastreia-lead2.png" alt="Rastreia Lead Logo" className="w-48 h-auto object-contain" />
                 </div>
 
                 {/* Client Selector (Moved to Sidebar) */}
@@ -48,7 +44,7 @@ export function Sidebar({ }: SidebarProps) {
                         onClick={() => setIsClientDropdownOpen(!isClientDropdownOpen)}
                         className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/5 transition-colors group"
                     >
-                        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg shadow-indigo-500/10 text-white text-xs font-bold">
+                        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center shadow-lg shadow-primary/20 text-background text-xs font-bold">
                             {selectedClient ? selectedClient.nome.substring(0, 2).toUpperCase() : <Users size={14} />}
                         </div>
                         <div className="flex-1 text-left min-w-0">
@@ -81,7 +77,7 @@ export function Sidebar({ }: SidebarProps) {
                                     >
                                         <div className={clsx(
                                             "w-1.5 h-1.5 rounded-full flex-shrink-0",
-                                            selectedClient?.id === client.id ? "bg-indigo-500 shadow-[0_0_10px_#6366f1]" : "bg-gray-700"
+                                            selectedClient?.id === client.id ? "bg-primary shadow-[0_0_10px_#CCFF00]" : "bg-gray-700"
                                         )} />
                                         <span className="font-medium text-sm truncate">{client.nome}</span>
                                     </button>
@@ -95,7 +91,7 @@ export function Sidebar({ }: SidebarProps) {
                                         navigate('/clients/new');
                                         setIsClientDropdownOpen(false);
                                     }}
-                                    className="w-full text-left px-3 py-2.5 rounded-lg transition-all flex items-center gap-3 text-indigo-400 hover:text-white hover:bg-white/5 border-t border-white/5 mt-1"
+                                    className="w-full text-left px-3 py-2.5 rounded-lg transition-all flex items-center gap-3 text-primary hover:text-primary/80 hover:bg-white/5 border-t border-white/5 mt-1"
                                 >
                                     <Plus size={14} />
                                     <span className="font-medium text-sm">Novo Cliente</span>
@@ -126,22 +122,30 @@ export function Sidebar({ }: SidebarProps) {
                             className={({ isActive }) => clsx(
                                 "w-full flex items-center gap-4 px-4 py-3.5 rounded-xl transition-all duration-300 group relative overflow-hidden",
                                 isActive
-                                    ? "text-white shadow-lg shadow-purple-500/10"
+                                    ? "text-white shadow-lg shadow-primary/10"
                                     : "text-gray-400 hover:text-white hover:bg-white/5"
                             )}
                         >
                             {({ isActive }) => (
                                 <>
                                     {isActive && (
-                                        <div className="absolute inset-0 bg-gradient-to-r from-indigo-600/20 to-purple-600/20 border-l-2 border-indigo-500" />
+                                        <div className="absolute inset-0 bg-gradient-to-r from-primary/15 to-primary/5 border-l-2 border-primary" />
                                     )}
-                                    <item.icon
-                                        size={20}
-                                        className={clsx(
-                                            "relative z-10 transition-colors duration-300",
-                                            isActive ? "text-indigo-400" : "text-gray-500 group-hover:text-gray-300"
-                                        )}
-                                    />
+                                    {item.label === 'Meta Ads' ? (
+                                        <img src="/icon-meta-ads.png" alt="Meta Ads" className={clsx("w-5 h-5 object-contain brightness-0 invert transition-opacity duration-300", isActive ? "opacity-100" : "opacity-50 group-hover:opacity-100")} />
+                                    ) : item.label === 'Google Ads' ? (
+                                        <img src="/icon-google-ads.png" alt="Google Ads" className={clsx("w-5 h-5 object-contain brightness-0 invert transition-opacity duration-300", isActive ? "opacity-100" : "opacity-50 group-hover:opacity-100")} />
+                                    ) : item.label === 'WhatsApp' ? (
+                                        <img src="/icon-whatsapp.png" alt="WhatsApp" className={clsx("w-5 h-5 object-contain brightness-0 invert transition-opacity duration-300", isActive ? "opacity-100" : "opacity-50 group-hover:opacity-100")} />
+                                    ) : (
+                                        <item.icon
+                                            size={20}
+                                            className={clsx(
+                                                "relative z-10 transition-colors duration-300",
+                                                isActive ? "text-primary" : "text-gray-500 group-hover:text-gray-300"
+                                            )}
+                                        />
+                                    )}
                                     <span className="relative z-10 font-medium text-sm tracking-wide">{item.label}</span>
                                 </>
                             )}
@@ -154,20 +158,20 @@ export function Sidebar({ }: SidebarProps) {
                         className={({ isActive }) => clsx(
                             "w-full flex items-center gap-4 px-4 py-3.5 rounded-xl transition-all duration-300 group relative overflow-hidden mt-4",
                             isActive
-                                ? "text-white shadow-lg shadow-purple-500/10"
+                                ? "text-white shadow-lg shadow-primary/10"
                                 : "text-gray-400 hover:text-white hover:bg-white/5"
                         )}
                     >
                         {({ isActive }) => (
                             <>
                                 {isActive && (
-                                    <div className="absolute inset-0 bg-gradient-to-r from-indigo-600/20 to-purple-600/20 border-l-2 border-indigo-500" />
+                                    <div className="absolute inset-0 bg-gradient-to-r from-primary/15 to-primary/5 border-l-2 border-primary" />
                                 )}
                                 <Settings
                                     size={20}
                                     className={clsx(
                                         "relative z-10 transition-colors duration-300",
-                                        isActive ? "text-indigo-400" : "text-gray-500 group-hover:text-gray-300"
+                                        isActive ? "text-primary" : "text-gray-500 group-hover:text-gray-300"
                                     )}
                                 />
                                 <span className="relative z-10 font-medium text-sm tracking-wide">Dados do Cliente</span>
@@ -192,7 +196,7 @@ export function Sidebar({ }: SidebarProps) {
                     {user?.role === 'super_admin' && (
                         <NavLink
                             to="/clients/new"
-                            className="flex items-center gap-2 text-indigo-400 hover:text-indigo-300 text-xs font-medium transition-colors w-full px-1 mb-2"
+                            className="flex items-center gap-2 text-primary hover:text-primary/80 text-xs font-medium transition-colors w-full px-1 mb-2"
                         >
                             <UserPlus size={14} />
                             <span>Novo Cliente</span>
@@ -203,7 +207,7 @@ export function Sidebar({ }: SidebarProps) {
                     {(user?.role === 'super_admin') && (
                         <NavLink
                             to="/users"
-                            className="flex items-center gap-2 text-purple-400 hover:text-purple-300 text-xs font-medium transition-colors w-full px-1 mb-2"
+                            className="flex items-center gap-2 text-secondary hover:text-secondary/80 text-xs font-medium transition-colors w-full px-1 mb-2"
                         >
                             <Users size={14} />
                             <span>Gerenciar Usuários</span>

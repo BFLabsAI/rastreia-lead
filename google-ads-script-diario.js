@@ -1,8 +1,7 @@
 // =====================================================
-// CONFIGURACAO - ALTERE ESTES VALORES
+// SCRIPT DIARIO - RODAR TODO DIA
 // =====================================================
-var TARGET_ACCOUNT_ID = '636-075-3747';
-var DAYS_TO_FETCH = 30; // Reduzido de 40 para 30 para evitar timeout
+var TARGET_ACCOUNT_ID = '636-075-3747'; // Altere para cada cliente (ou deixe vazio se nao for MCC)
 var WEBHOOK_URL = 'https://iixeygzkgfwetchjvpvo.supabase.co/functions/v1/webhook-google-ads';
 var TOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlpeGV5Z3prZ2Z3ZXRjaGp2cHZvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU2MDc5NjMsImV4cCI6MjA3MTE4Mzk2M30.gWKk7Q1L_9Ci4j1AF05Di_ST6ZMF2F5l6zvoyKh_VMc';
 
@@ -10,46 +9,50 @@ function main() {
   // 1. SELECIONAR A CONTA
   var accountId, accountName, timeZone;
 
-  // Tenta usar AdsApp.accounts() (conta MCC)
-  try {
-    var accountIterator = AdsApp.accounts()
-      .withCondition('customer_id = "' + TARGET_ACCOUNT_ID + '"')
-      .get();
+  // Se TARGET_ACCOUNT_ID esta definido, tenta selecionar a conta no MCC
+  if (TARGET_ACCOUNT_ID && TARGET_ACCOUNT_ID !== '') {
+    try {
+      var accountIterator = AdsApp.accounts()
+        .withCondition('customer_id = "' + TARGET_ACCOUNT_ID + '"')
+        .get();
 
-    if (accountIterator.hasNext()) {
-      var account = accountIterator.next();
-      AdsApp.select(account);
-      accountId = account.getCustomerId();
-      accountName = account.getName();
-      timeZone = account.getTimeZone();
-      Logger.log('Conta MCC selecionada: ' + accountName + ' (' + accountId + ')');
-    } else {
-      Logger.log('ERRO: Conta ' + TARGET_ACCOUNT_ID + ' nao encontrada no MCC!');
-      return;
+      if (accountIterator.hasNext()) {
+        var account = accountIterator.next();
+        AdsApp.select(account);
+        accountId = account.getCustomerId();
+        accountName = account.getName();
+        timeZone = account.getTimeZone();
+        Logger.log('Conta MCC selecionada: ' + accountName + ' (' + accountId + ')');
+      } else {
+        Logger.log('ERRO: Conta ' + TARGET_ACCOUNT_ID + ' nao encontrada no MCC!');
+        return;
+      }
+    } catch (e) {
+      // Nao e MCC, usa conta atual
+      var currentAccount = AdsApp.currentAccount();
+      accountId = currentAccount.getCustomerId();
+      accountName = currentAccount.getName();
+      timeZone = currentAccount.getTimeZone();
+      Logger.log('Conta individual: ' + accountName + ' (' + accountId + ')');
     }
-  } catch (e) {
-    // Nao e MCC, usa a conta atual diretamente
+  } else {
+    // Sem TARGET_ACCOUNT_ID, usa conta atual
     var currentAccount = AdsApp.currentAccount();
     accountId = currentAccount.getCustomerId();
     accountName = currentAccount.getName();
     timeZone = currentAccount.getTimeZone();
-    Logger.log('Conta individual: ' + accountName + ' (' + accountId + ')');
+    Logger.log('Conta: ' + accountName + ' (' + accountId + ')');
   }
 
-  // 2. CONFIGURAR PERIODO (40 DIAS)
-  var today = new Date();
-  var dateEnd = Utilities.formatDate(today, timeZone, 'yyyy-MM-dd');
+  // 2. DATA DE ONTEM
+  var yesterday = new Date();
+  yesterday.setDate(yesterday.getDate() - 1);
+  var dateStr = Utilities.formatDate(yesterday, timeZone, 'yyyy-MM-dd');
+  Logger.log('Buscando dados de: ' + dateStr);
 
-  var pastDate = new Date();
-  pastDate.setDate(today.getDate() - DAYS_TO_FETCH);
-  var dateStart = Utilities.formatDate(pastDate, timeZone, 'yyyy-MM-dd');
-
-  Logger.log('Buscando dados de: ' + dateStart + ' ate ' + dateEnd);
-
-  // 3. BUSCAR CAMPANHAS AGRUPADAS POR DATA
+  // 3. BUSCAR CAMPANHAS
   var campaignQuery = '' +
     'SELECT ' +
-    '  segments.date, ' +
     '  campaign.id, ' +
     '  campaign.name, ' +
     '  campaign.status, ' +
@@ -62,29 +65,23 @@ function main() {
     '  metrics.impressions ' +
     'FROM campaign ' +
     'WHERE campaign.advertising_channel_type IN ("SEARCH", "PERFORMANCE_MAX") ' +
-    '  AND segments.date BETWEEN "' + dateStart + '" AND "' + dateEnd + '" ' +
-    'ORDER BY segments.date ASC';
+    '  AND segments.date = "' + dateStr + '"';
 
   var campaignIterator = AdsApp.search(campaignQuery);
-  var dataByDate = {};
+  var campaignMap = {};
 
   while (campaignIterator.hasNext()) {
     var row = campaignIterator.next();
-    var date = row.segments.date;
     var campaignId = row.campaign.id;
 
-    if (!dataByDate[date]) {
-      dataByDate[date] = {};
-    }
-
-    dataByDate[date][campaignId] = {
+    campaignMap[campaignId] = {
       accountId: accountId,
       accountName: accountName,
       campaignId: campaignId,
       name: row.campaign.name,
       isEnabled: row.campaign.status === 'ENABLED',
       type: row.campaign.advertisingChannelType,
-      date: date,
+      date: dateStr,
       stats: {
         averageCpc: parseFloat(row.metrics.averageCpc) || 0,
         ctr: parseFloat(row.metrics.ctr) || 0,
@@ -97,12 +94,11 @@ function main() {
     };
   }
 
-  Logger.log('Campanhas encontradas para ' + Object.keys(dataByDate).length + ' dias');
+  Logger.log('Campanhas encontradas: ' + Object.keys(campaignMap).length);
 
-  // 4. BUSCAR AD GROUPS (agrupados por data)
+  // 4. BUSCAR AD GROUPS
   var adGroupQuery = '' +
     'SELECT ' +
-    '  segments.date, ' +
     '  campaign.id, ' +
     '  ad_group.id, ' +
     '  ad_group.name, ' +
@@ -112,7 +108,7 @@ function main() {
     '  metrics.cost_micros, ' +
     '  metrics.impressions ' +
     'FROM ad_group ' +
-    'WHERE segments.date BETWEEN "' + dateStart + '" AND "' + dateEnd + '" ' +
+    'WHERE segments.date = "' + dateStr + '" ' +
     '  AND campaign.status = "ENABLED" ' +
     '  AND ad_group.status = "ENABLED"';
 
@@ -120,12 +116,11 @@ function main() {
 
   while (adGroupIterator.hasNext()) {
     var row = adGroupIterator.next();
-    var date = row.segments.date;
     var campaignId = row.campaign.id;
     var adGroupId = row.adGroup.id;
 
-    if (dataByDate[date] && dataByDate[date][campaignId]) {
-      dataByDate[date][campaignId].adGroups[adGroupId] = {
+    if (campaignMap[campaignId]) {
+      campaignMap[campaignId].adGroups[adGroupId] = {
         adGroupId: adGroupId,
         name: row.adGroup.name,
         status: row.adGroup.status,
@@ -140,10 +135,9 @@ function main() {
     }
   }
 
-  // 5. BUSCAR KEYWORDS (agrupadas por data e ad group)
+  // 5. BUSCAR KEYWORDS
   var keywordQuery = '' +
     'SELECT ' +
-    '  segments.date, ' +
     '  campaign.id, ' +
     '  ad_group.id, ' +
     '  ad_group_criterion.criterion_id, ' +
@@ -153,22 +147,19 @@ function main() {
     '  metrics.conversions, ' +
     '  metrics.cost_micros ' +
     'FROM keyword_view ' +
-    'WHERE segments.date BETWEEN "' + dateStart + '" AND "' + dateEnd + '" ' +
-    '  AND ad_group_criterion.status = "ENABLED" ' +
-    '  AND campaign.status = "ENABLED"';
+    'WHERE segments.date = "' + dateStr + '" ' +
+    '  AND campaign.status = "ENABLED" ' +
+    '  AND ad_group_criterion.status = "ENABLED"';
 
   var keywordIterator = AdsApp.search(keywordQuery);
 
   while (keywordIterator.hasNext()) {
     var row = keywordIterator.next();
-    var date = row.segments.date;
     var campaignId = row.campaign.id;
     var adGroupId = row.adGroup.id;
 
-    if (dataByDate[date] &&
-      dataByDate[date][campaignId] &&
-      dataByDate[date][campaignId].adGroups[adGroupId]) {
-      dataByDate[date][campaignId].adGroups[adGroupId].keywords.push({
+    if (campaignMap[campaignId] && campaignMap[campaignId].adGroups[adGroupId]) {
+      campaignMap[campaignId].adGroups[adGroupId].keywords.push({
         keywordId: row.adGroupCriterion.criterionId,
         keyword: row.adGroupCriterion.keyword.text,
         matchType: row.adGroupCriterion.keyword.matchType,
@@ -180,10 +171,9 @@ function main() {
     }
   }
 
-  // 6. BUSCAR SEARCH TERMS (agrupados por data)
+  // 6. BUSCAR SEARCH TERMS
   var searchTermQuery = '' +
     'SELECT ' +
-    '  segments.date, ' +
     '  campaign.id, ' +
     '  ad_group.id, ' +
     '  search_term_view.search_term, ' +
@@ -192,29 +182,24 @@ function main() {
     '  metrics.conversions, ' +
     '  metrics.cost_micros ' +
     'FROM search_term_view ' +
-    'WHERE segments.date BETWEEN "' + dateStart + '" AND "' + dateEnd + '" ' +
+    'WHERE segments.date = "' + dateStr + '" ' +
     '  AND campaign.status = "ENABLED"';
 
   var termIterator = AdsApp.search(searchTermQuery);
 
   while (termIterator.hasNext()) {
     var row = termIterator.next();
-    var date = row.segments.date;
     var campaignId = row.campaign.id;
     var adGroupId = row.adGroup.id;
 
-    if (dataByDate[date] &&
-      dataByDate[date][campaignId] &&
-      dataByDate[date][campaignId].adGroups[adGroupId]) {
-
+    if (campaignMap[campaignId] && campaignMap[campaignId].adGroups[adGroupId]) {
       var keywordIdClean = null;
       var kwIdRaw = row.segments.keyword ? row.segments.keyword.adGroupCriterion : null;
       if (kwIdRaw && kwIdRaw.indexOf('~') > -1) {
         keywordIdClean = kwIdRaw.split('~')[1];
       }
 
-      // Encontrar a keyword correspondente e adicionar o search term
-      var keywords = dataByDate[date][campaignId].adGroups[adGroupId].keywords;
+      var keywords = campaignMap[campaignId].adGroups[adGroupId].keywords;
       for (var k = 0; k < keywords.length; k++) {
         // FIX: Comparar como strings para evitar problema de tipo
         var kwIdStr = String(keywords[k].keywordId);
@@ -234,75 +219,57 @@ function main() {
     }
   }
 
-  // 7. PROCESSAR E ENVIAR (por dia)
-  var allDates = Object.keys(dataByDate).sort();
-  var totalSent = 0;
-  var totalFacts = 0;
+  // 7. PREPARAR ARRAY FINAL
+  var campaignDataArray = [];
+  for (var campaignId in campaignMap) {
+    var camp = campaignMap[campaignId];
 
-  for (var i = 0; i < allDates.length; i++) {
-    var date = allDates[i];
-    var campaignsForDate = [];
+    // Converter adGroups para array e limitar keywords/search terms
+    var adGroupsArray = [];
+    for (var adGroupId in camp.adGroups) {
+      var ag = camp.adGroups[adGroupId];
 
-    for (var campaignId in dataByDate[date]) {
-      var camp = dataByDate[date][campaignId];
+      // Top 5 keywords por ad group
+      ag.keywords.sort(function(a, b) { return b.clicks - a.clicks; });
+      ag.keywords = ag.keywords.slice(0, 5);
 
-      // Converter adGroups de objeto para array e limitar keywords/search terms
-      var adGroupsArray = [];
-      for (var adGroupId in camp.adGroups) {
-        var ag = camp.adGroups[adGroupId];
-
-        // Limitar Top 5 keywords por ad group
-        ag.keywords.sort(function (a, b) { return b.clicks - a.clicks; });
-        ag.keywords = ag.keywords.slice(0, 5);
-
-        // Limitar Top 5 search terms por keyword
-        for (var k = 0; k < ag.keywords.length; k++) {
-          ag.keywords[k].searchTerms.sort(function (a, b) { return b.clicks - a.clicks; });
-          ag.keywords[k].searchTerms = ag.keywords[k].searchTerms.slice(0, 5);
-        }
-
-        adGroupsArray.push(ag);
+      // Top 5 search terms por keyword
+      for (var k = 0; k < ag.keywords.length; k++) {
+        ag.keywords[k].searchTerms.sort(function(a, b) { return b.clicks - a.clicks; });
+        ag.keywords[k].searchTerms = ag.keywords[k].searchTerms.slice(0, 5);
       }
 
-      // Ordenar ad groups por custo
-      adGroupsArray.sort(function (a, b) { return b.stats.cost - a.stats.cost; });
-
-      campaignsForDate.push({
-        accountId: camp.accountId,
-        accountName: camp.accountName,
-        campaignId: camp.campaignId,
-        name: camp.name,
-        isEnabled: camp.isEnabled,
-        type: camp.type,
-        date: camp.date,
-        stats: camp.stats,
-        adGroups: adGroupsArray
-      });
+      adGroupsArray.push(ag);
     }
 
-    // Enviar dados desse dia especifico
-    var payload = {
-      date: date,
-      campaigns: campaignsForDate
-    };
+    adGroupsArray.sort(function(a, b) { return b.stats.cost - a.stats.cost; });
 
-    var result = sendToWebhook(payload);
-
-    if (result.success) {
-      totalSent++;
-      totalFacts += campaignsForDate.length;
-      Logger.log('OK ' + date + ': ' + campaignsForDate.length + ' campanhas enviadas');
-    } else {
-      Logger.log('ERRO ' + date + ': ' + result.error);
-    }
-
-    Utilities.sleep(100);
+    campaignDataArray.push({
+      accountId: camp.accountId,
+      accountName: camp.accountName,
+      campaignId: camp.campaignId,
+      name: camp.name,
+      isEnabled: camp.isEnabled,
+      type: camp.type,
+      date: camp.date,
+      stats: camp.stats,
+      adGroups: adGroupsArray
+    });
   }
 
-  Logger.log('');
-  Logger.log('========== RESUMO ==========');
-  Logger.log('Total de dias processados: ' + totalSent);
-  Logger.log('Total de fatos enviados: ' + totalFacts);
+  // 8. ENVIAR PARA WEBHOOK
+  var payload = {
+    date: dateStr,
+    campaigns: campaignDataArray
+  };
+
+  var result = sendToWebhook(payload);
+
+  if (result.success) {
+    Logger.log('OK! ' + campaignDataArray.length + ' campanhas enviadas para ' + dateStr);
+  } else {
+    Logger.log('ERRO: ' + result.error);
+  }
 }
 
 // FUNCAO AUXILIAR: Enviar para Webhook

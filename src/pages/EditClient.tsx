@@ -92,7 +92,7 @@ export function EditClient() {
         return (
             <div className="p-8 text-center">
                 <h2 className="text-white text-xl">Nenhum cliente selecionado</h2>
-                <button onClick={() => navigate('/')} className="mt-4 text-indigo-400 hover:text-indigo-300">Voltar para Dashboard</button>
+                <button onClick={() => navigate('/')} className="mt-4 text-primary hover:text-primary/80">Voltar para Dashboard</button>
             </div>
         );
     }
@@ -141,7 +141,7 @@ export function EditClient() {
                                         type="text"
                                         value={clientName}
                                         onChange={(e) => setClientName(e.target.value)}
-                                        className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white focus:border-indigo-500/50 focus:bg-white/10 transition-all outline-none"
+                                        className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white focus:border-primary/50 focus:bg-white/10 transition-all outline-none"
                                         disabled={isSaving}
                                     />
                                 </div>
@@ -213,7 +213,7 @@ export function EditClient() {
                                             type="text"
                                             value={metaAccountId}
                                             onChange={(e) => setMetaAccountId(e.target.value)}
-                                            className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white focus:border-indigo-500/50 focus:bg-white/10 outline-none"
+                                            className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white focus:border-primary/50 focus:bg-white/10 outline-none"
                                             disabled={isSaving}
                                         />
                                     </div>
@@ -223,7 +223,7 @@ export function EditClient() {
                                             type="text"
                                             value={googleAccountId}
                                             onChange={(e) => setGoogleAccountId(e.target.value)}
-                                            className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white focus:border-indigo-500/50 focus:bg-white/10 outline-none"
+                                            className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white focus:border-primary/50 focus:bg-white/10 outline-none"
                                             disabled={isSaving}
                                         />
                                     </div>
@@ -238,7 +238,7 @@ export function EditClient() {
                                             value={instancia}
                                             onChange={(e) => setInstancia(e.target.value)}
                                             placeholder="Ex: whatsapp_vendas_01"
-                                            className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white focus:border-indigo-500/50 focus:bg-white/10 outline-none"
+                                            className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white focus:border-primary/50 focus:bg-white/10 outline-none"
                                             disabled={isSaving}
                                         />
                                         <p className="text-xs text-gray-500 mt-2">Nome da instância no servidor UazAPI.</p>
@@ -252,7 +252,7 @@ export function EditClient() {
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                                 {/* Enviar Relatório Meta */}
                                 <div className="bg-white/5 rounded-xl p-6 border border-white/10 flex flex-col items-center text-center gap-4 hover:bg-white/10 transition-colors">
-                                    <div className={`p-3 rounded-full ${enviarRelatorioMeta ? 'bg-indigo-500/20 text-indigo-400' : 'bg-gray-800 text-gray-600'}`}>
+                                    <div className={`p-3 rounded-full ${enviarRelatorioMeta ? 'bg-primary/20 text-primary' : 'bg-gray-800 text-gray-600'}`}>
                                         <BarChart3 size={24} />
                                     </div>
                                     <div>
@@ -262,7 +262,7 @@ export function EditClient() {
                                     <button
                                         type="button"
                                         onClick={() => setEnviarRelatorioMeta(!enviarRelatorioMeta)}
-                                        className={`w-full py-2 rounded-lg text-xs font-bold transition-all ${enviarRelatorioMeta ? 'bg-indigo-600 text-white' : 'bg-gray-700 text-gray-400'}`}
+                                        className={`w-full py-2 rounded-lg text-xs font-bold transition-all ${enviarRelatorioMeta ? 'bg-primary text-background' : 'bg-gray-700 text-gray-400'}`}
                                     >
                                         {enviarRelatorioMeta ? 'ATIVADO' : 'DESATIVADO'}
                                     </button>
@@ -314,7 +314,7 @@ export function EditClient() {
                                     <select
                                         value={tipoPagamento}
                                         onChange={(e) => setTipoPagamento(e.target.value)}
-                                        className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white focus:border-indigo-500/50 outline-none appearance-none"
+                                        className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white focus:border-primary/50 outline-none appearance-none"
                                         disabled={isSaving}
                                     >
                                         <option value="Cartão" className="bg-[#0A0A0A]">Cartão de Crédito</option>
@@ -331,7 +331,7 @@ export function EditClient() {
                                             onChange={(e) => setValorBase(e.target.value)}
                                             placeholder="0,00"
                                             step="0.01"
-                                            className="w-full pl-10 pr-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white focus:border-indigo-500/50 outline-none"
+                                            className="w-full pl-10 pr-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white focus:border-primary/50 outline-none"
                                             disabled={isSaving}
                                         />
                                     </div>
@@ -365,7 +365,7 @@ export function EditClient() {
 
                         <button
                             type="submit"
-                            className="px-8 py-3 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-bold shadow-lg shadow-indigo-500/30 transition-all flex items-center gap-2"
+                            className="px-8 py-3 rounded-xl bg-gradient-to-r from-primary to-primary/70 hover:from-primary hover:to-primary/60 text-background font-bold shadow-lg shadow-primary/30 transition-all flex items-center gap-2"
                             disabled={isSaving}
                         >
                             {isSaving ? <Loader2 className="animate-spin" /> : <Save size={20} />}

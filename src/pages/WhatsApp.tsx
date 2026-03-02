@@ -592,7 +592,7 @@ export function WhatsApp() {
                             ) : (
                                 <div className="flex-1 flex flex-col items-center justify-center text-gray-500">
                                     <div className="w-20 h-20 rounded-full bg-gradient-to-br from-green-500/20 to-emerald-600/20 flex items-center justify-center mb-4">
-                                        <MessageSquare size={40} className="text-green-500" />
+                                        <img src="/icon-whatsapp.png" alt="WhatsApp" className="w-10 h-10 object-contain brightness-0 invert" />
                                     </div>
                                     <p className="text-xl font-medium text-white mb-2">WhatsApp</p>
                                     <p className="text-sm">Selecione uma conversa para visualizar</p>
