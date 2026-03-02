@@ -34,7 +34,7 @@ export function Login() {
 
             <div className="w-full max-w-md relative z-10">
                 <div className="text-center mb-12">
-                    <img src="/logo-rastreia.png" alt="Rastreia Lead Logo" className="w-24 h-24 object-contain mx-auto mb-6 hover:scale-105 transition-transform duration-300 rounded-3xl shadow-2xl shadow-primary/30" />
+                    <img src="/logo-rastreia.png" alt="Rastreia Lead Logo" className="w-48 h-auto object-contain mx-auto mb-6 hover:scale-105 transition-transform duration-300" />
                     <h1 className="text-4xl font-bold text-white mb-2 tracking-tight">Bem-vindo</h1>
                     <p className="text-gray-400 text-lg">Faça login para acessar o painel</p>
                 </div>
