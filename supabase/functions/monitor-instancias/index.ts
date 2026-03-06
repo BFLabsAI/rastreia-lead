@@ -3,7 +3,7 @@ import { createClient } from 'npm:@supabase/supabase-js@2';
 
 const UAZAPI_URL = 'https://bflabs.uazapi.com';
 const BF_LABS_TESTE_TOKEN = 'f2638174-33c2-471e-8ed6-a75f12b4cb39';
-const RASTREIA_LEAD_URL = 'https://rastreialead.vercel.app';
+const RASTREIA_LEAD_URL = 'https://rastreia-lead.vercel.app';
 
 interface Instance {
   id: string;
