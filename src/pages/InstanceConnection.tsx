@@ -29,11 +29,23 @@ export function InstanceConnection() {
 
         const fetchInstance = async () => {
             try {
-                const { data, error } = await supabase
+                // Tenta buscar por share_token primeiro, depois por uazapi_instance_id
+                let { data, error } = await supabase
                     .from('instances_clientes_bf_labs')
                     .select('*')
                     .eq('share_token', token)
                     .single();
+
+                // Se não encontrou por share_token, tenta por uazapi_instance_id
+                if (error || !data) {
+                    const result = await supabase
+                        .from('instances_clientes_bf_labs')
+                        .select('*')
+                        .eq('uazapi_instance_id', token)
+                        .single();
+                    data = result.data;
+                    error = result.error;
+                }
 
                 if (error || !data) {
                     throw new Error('Instância não encontrada ou link expirado');
