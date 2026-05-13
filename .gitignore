@@ -1,3 +1,14 @@
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# IDE / tooling
+.claude/
+.mcp.json
+.overclock-app/
+supabase/.temp/
+
 # Logs
 logs
 *.log

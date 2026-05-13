@@ -1,11 +1,13 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
-import { MessageSquare, Image, FileText, Video, Mic, ArrowLeft, User, Clock, Phone, MapPin, Instagram, Facebook, LinkIcon, Info, Search, Filter } from 'lucide-react';
+import { MessageSquare, Image, FileText, Video, Mic, ArrowLeft, User, Clock, Phone, MapPin, Instagram, Facebook, LinkIcon, Info, Search, Filter, Send, Plus, X } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useClient } from '../contexts/ClientContext';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Badge } from '../components/ui/badge';
 import { Input } from '../components/ui/input';
+import { uazapiClient } from '@/services/uazapiClient';
+import { useAuthStore } from '@/store/authStore';
 
 interface Lead {
     id: string;
@@ -124,6 +126,25 @@ export function WhatsApp() {
     const [searchTerm, setSearchTerm] = useState('');
     const [filterOrigem, setFilterOrigem] = useState<string>('all');
     const [filterInstance, setFilterInstance] = useState<string>('all');
+    const [messageInput, setMessageInput] = useState('');
+    const [isSending, setIsSending] = useState(false);
+    const [instanceStatus, setInstanceStatus] = useState<string | null>(null);
+    const [pendingMessages, setPendingMessages] = useState<Array<{
+        tempId: string;
+        content: string;
+        status: 'sending' | 'error';
+        errorMessage?: string;
+        createdAt: Date;
+    }>>([]);
+    const textareaRef = useRef<HTMLTextAreaElement>(null);
+    const user = useAuthStore(state => state.user);
+    const [showNewConversation, setShowNewConversation] = useState(false);
+    const [newConvPhone, setNewConvPhone] = useState('');
+    const [newConvText, setNewConvText] = useState('');
+    const [newConvInstance, setNewConvInstance] = useState('');
+    const [connectedInstances, setConnectedInstances] = useState<Array<{ instance_name: string }>>([]);
+    const [isStartingConversation, setIsStartingConversation] = useState(false);
+    const [newConvError, setNewConvError] = useState<string | null>(null);
 
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -133,7 +154,7 @@ export function WhatsApp() {
 
     useEffect(() => {
         scrollToBottom();
-    }, [messages]);
+    }, [messages, pendingMessages]);
 
     const fetchConversations = useCallback(async () => {
         if (!selectedClient) return;
@@ -225,6 +246,40 @@ export function WhatsApp() {
         }
     };
 
+    const fetchInstanceStatus = async (instanceName: string | null) => {
+        if (!instanceName) { setInstanceStatus(null); return; }
+        const { data } = await supabase
+            .from('instances_clientes_bf_labs')
+            .select('status')
+            .eq('instance_name', instanceName)
+            .single();
+        setInstanceStatus(data?.status || null);
+    };
+
+    const fetchConnectedInstances = async () => {
+        if (!selectedClient) return;
+        const { data } = await supabase
+            .from('instances_clientes_bf_labs')
+            .select('instance_name')
+            .eq('client_id', selectedClient.id)
+            .eq('status', 'connected');
+        setConnectedInstances(data || []);
+        if (data && data.length > 0) setNewConvInstance(data[0].instance_name);
+    };
+
+    const applyPhoneMask = (value: string): string => {
+        const digits = value.replace(/\D/g, '').slice(0, 11);
+        if (digits.length <= 2) return `(${digits}`;
+        if (digits.length <= 7) return `(${digits.slice(0, 2)}) ${digits.slice(2)}`;
+        if (digits.length <= 11) return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`;
+        return value;
+    };
+
+    const phoneToApi = (masked: string): string => {
+        const digits = masked.replace(/\D/g, '');
+        return digits.length === 11 ? `55${digits}` : digits;
+    };
+
     const handleSelectConversation = (conv: ConversationPreview) => {
         const lead: Lead = {
             id: conv.lead_id,
@@ -236,6 +291,7 @@ export function WhatsApp() {
         selectedLeadIdRef.current = conv.lead_id;
         fetchMessages(conv.lead_id);
         fetchLeadInfo(conv.lead_id);
+        fetchInstanceStatus(conv.lead_instance);
 
         // Optimistically update unread count locally (optional)
         setConversations(prev => prev.map(c =>
@@ -243,11 +299,83 @@ export function WhatsApp() {
         ));
     };
 
+    const sendMessage = async () => {
+        if (!messageInput.trim() || !selectedLead || !leadInfo || isSending) return;
+
+        const text = messageInput.trim();
+        const tempId = crypto.randomUUID();
+
+        setMessageInput('');
+        setPendingMessages(prev => [...prev, { tempId, content: text, status: 'sending', createdAt: new Date() }]);
+        setIsSending(true);
+
+        try {
+            const phoneNumber = selectedLead.telefone_lead.replace('@s.whatsapp.net', '').replace('@c.us', '');
+            await uazapiClient.sendTextMessage(
+                leadInfo.instance_name!,
+                phoneNumber,
+                text,
+                selectedClient!.id,
+                selectedLead.id,
+                user?.id
+            );
+            setPendingMessages(prev => prev.filter(m => m.tempId !== tempId));
+        } catch (error: any) {
+            setPendingMessages(prev => prev.map(m =>
+                m.tempId === tempId
+                    ? { ...m, status: 'error', errorMessage: error.message }
+                    : m
+            ));
+        } finally {
+            setIsSending(false);
+        }
+    };
+
+    const handleStartConversation = async () => {
+        const digits = newConvPhone.replace(/\D/g, '');
+        if (digits.length < 10 || !newConvText.trim() || !newConvInstance) return;
+
+        setIsStartingConversation(true);
+        setNewConvError(null);
+
+        try {
+            const result = await uazapiClient.startConversation(
+                phoneToApi(newConvPhone),
+                newConvText.trim(),
+                newConvInstance,
+                selectedClient!.id
+            );
+
+            setShowNewConversation(false);
+            setNewConvPhone('');
+            setNewConvText('');
+            setNewConvError(null);
+
+            const lead = result.lead;
+            setSelectedLead({
+                id: lead.id,
+                telefone_lead: lead.telefone_lead,
+                nome: lead.lead_name || lead.nome,
+            });
+            selectedLeadIdRef.current = lead.id;
+            fetchMessages(lead.id);
+            fetchLeadInfo(lead.id);
+            fetchInstanceStatus(lead.instance_name);
+
+            fetchConversations();
+        } catch (error: any) {
+            setNewConvError(error.message);
+        } finally {
+            setIsStartingConversation(false);
+        }
+    };
+
     // Realtime subscription
     useEffect(() => {
         if (!selectedClient) return;
 
         fetchConversations();
+        fetchConnectedInstances();
 
         const channel = supabase
             .channel(`whatsapp-dashboard-${selectedClient.id}`)
@@ -265,6 +393,9 @@ export function WhatsApp() {
 
                         // If chat is open, append message
                         if (newMessage.lead_id === selectedLeadIdRef.current) {
+                            if (newMessage.direction === 'outbound') {
+                                setPendingMessages(prev => prev.filter(m => m.content !== newMessage.content));
+                            }
                             setMessages(prev => [...prev, newMessage]);
                         }
 
@@ -369,7 +500,7 @@ export function WhatsApp() {
     });
 
     return (
-        <div className="flex flex-col h-full w-full p-4 overflow-hidden">
+        <div className="flex flex-col h-full w-full p-2 lg:p-4 overflow-hidden">
             {/* Header */}
             <div className="mb-4 flex items-center justify-between flex-shrink-0">
                 <div className="flex items-center gap-3">
@@ -386,14 +517,23 @@ export function WhatsApp() {
             </div>
 
             {/* Chat Container */}
-            <div className="bg-[#0A0A0A] rounded-3xl border border-white/5 shadow-2xl overflow-hidden flex-1 flex flex-col min-h-0">
+            <div className="bg-[#0A0A0A] rounded-xl lg:rounded-3xl border border-white/5 shadow-2xl overflow-hidden flex-1 flex flex-col min-h-0">
                 <div className="flex h-full">
                     {/* Conversations List */}
-                    <div className={`w-80 border-r border-white/5 flex flex-col ${selectedLead ? 'hidden md:flex' : 'flex'}`}>
+                    <div className={`w-56 md:w-64 xl:w-80 flex-shrink-0 border-r border-white/5 flex flex-col ${selectedLead ? 'hidden md:flex' : 'flex'}`}>
                         <div className="p-4 border-b border-white/5 flex flex-col gap-3">
                             <div className="flex items-center justify-between">
                                 <h2 className="text-lg font-semibold text-white">Conversas</h2>
-                                <p className="text-xs text-gray-500">{filteredConversations.length} conversas</p>
+                                <div className="flex items-center gap-2">
+                                    <p className="text-xs text-gray-500">{filteredConversations.length} conversas</p>
+                                    <button
+                                        onClick={() => setShowNewConversation(true)}
+                                        className="p-1.5 bg-green-600 hover:bg-green-500 rounded-lg transition-colors"
+                                        title="Nova Conversa"
+                                    >
+                                        <Plus size={14} className="text-white" />
+                                    </button>
+                                </div>
                             </div>
 
                             <div className="space-y-2">
@@ -495,14 +635,14 @@ export function WhatsApp() {
                     </div >
 
                     {/* Chat Area */}
-                    < div className={`flex-1 flex flex-col ${!selectedLead ? 'hidden md:flex' : 'flex'}`
+                    < div className={`flex-1 min-w-0 flex flex-col ${!selectedLead ? 'hidden md:flex' : 'flex'}`
                     }>
                         {
                             selectedLead ? (
                                 <>
                                     {/* Chat Header */}
-                                    < div className="p-4 border-b border-white/5 flex items-center justify-between gap-3" >
-                                        <div className="flex items-center gap-3">
+                                    < div className="p-4 border-b border-white/5 flex items-center justify-between gap-3 min-w-0" >
+                                        <div className="flex items-center gap-3 min-w-0">
                                             <button
                                                 onClick={() => setSelectedLead(null)}
                                                 className="md:hidden p-2 hover:bg-white/5 rounded-lg transition-colors"
@@ -512,8 +652,8 @@ export function WhatsApp() {
                                             <div className="w-10 h-10 rounded-full bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center">
                                                 <User size={18} className="text-white" />
                                             </div>
-                                            <div>
-                                                <p className="text-white font-medium">
+                                            <div className="min-w-0">
+                                                <p className="text-white font-medium truncate">
                                                     {selectedLead.nome || formatPhoneNumber(selectedLead.telefone_lead)}
                                                 </p>
                                             </div>
@@ -577,16 +717,69 @@ export function WhatsApp() {
                                                     </div>
                                                 ))
                                             )}
+                                        {pendingMessages.map((pm) => (
+                                            <div key={pm.tempId} className="flex justify-end">
+                                                <div className="max-w-[70%]">
+                                                    <div className={`rounded-2xl px-4 py-2 rounded-br-sm ${
+                                                        pm.status === 'error'
+                                                            ? 'bg-red-900/50 border border-red-500/30'
+                                                            : 'bg-gradient-to-r from-green-600 to-emerald-600 opacity-60'
+                                                    }`}>
+                                                        <p className="text-sm text-white whitespace-pre-wrap break-words">{pm.content}</p>
+                                                        <div className="flex items-center gap-1 mt-1 justify-end">
+                                                            {pm.status === 'sending' && (
+                                                                <div className="w-3 h-3 border border-white/60 border-t-transparent rounded-full animate-spin" />
+                                                            )}
+                                                            <span className="text-[10px] opacity-60">
+                                                                {format(pm.createdAt, 'HH:mm', { locale: ptBR })}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                    {pm.status === 'error' && pm.errorMessage && (
+                                                        <p className="text-xs text-red-400 mt-1 text-right">{pm.errorMessage}</p>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        ))}
+                                        <div ref={messagesEndRef} />
                                     </div >
 
-                                    {/* Input Area (Read-only indicator) */}
+                                    {/* Input Area */}
                                     < div className="p-4 border-t border-white/5 bg-[#0A0A0A]" >
-                                        <div className="flex items-center gap-3 px-4 py-3 bg-[#111] rounded-xl border border-white/5">
-                                            <Clock size={18} className="text-gray-500" />
-                                            <p className="text-gray-500 text-sm">
-                                                Visualização somente leitura
-                                            </p>
-                                        </div>
+                                        {!leadInfo?.instance_name || instanceStatus !== 'connected' ? (
+                                            <div className="flex items-center gap-3 px-4 py-3 bg-[#111] rounded-xl border border-white/5">
+                                                <Clock size={18} className="text-gray-500" />
+                                                <p className="text-gray-500 text-sm">
+                                                    {!leadInfo?.instance_name
+                                                        ? 'Sem instância associada a este lead'
+                                                        : 'Instância desconectada — não é possível enviar mensagens'}
+                                                </p>
+                                            </div>
+                                        ) : (
+                                            <div className="flex items-end gap-2">
+                                                <textarea
+                                                    ref={textareaRef}
+                                                    value={messageInput}
+                                                    onChange={(e) => setMessageInput(e.target.value)}
+                                                    onKeyDown={(e) => {
+                                                        if (e.key === 'Enter' && !e.shiftKey) {
+                                                            e.preventDefault();
+                                                            sendMessage();
+                                                        }
+                                                    }}
+                                                    placeholder="Digite uma mensagem... (Enter para enviar)"
+                                                    rows={1}
+                                                    className="flex-1 resize-none bg-[#111] border border-white/10 text-white placeholder:text-gray-600 text-sm rounded-xl px-4 py-3 outline-none focus:border-green-500/50 max-h-32 overflow-y-auto"
+                                                />
+                                                <button
+                                                    onClick={sendMessage}
+                                                    disabled={!messageInput.trim() || isSending}
+                                                    className="p-3 bg-green-600 hover:bg-green-500 disabled:opacity-40 disabled:cursor-not-allowed rounded-xl transition-colors flex-shrink-0"
+                                                >
+                                                    <Send size={18} className="text-white" />
+                                                </button>
+                                            </div>
+                                        )}
                                     </div >
                                 </>
                             ) : (
@@ -603,7 +796,7 @@ export function WhatsApp() {
                     {/* Lead Info Panel - Right Side */}
                     {
                         selectedLead && showLeadInfo && leadInfo && (
-                            <div className="w-72 border-l border-white/5 flex-col hidden lg:flex bg-[#0A0A0A]">
+                            <div className="w-64 xl:w-72 border-l border-white/5 flex-col hidden lg:flex bg-[#0A0A0A]">
                                 <div className="p-4 border-b border-white/5 flex items-center justify-between">
                                     <h3 className="text-sm font-semibold text-white">Informações do Lead</h3>
                                     <button
@@ -738,6 +931,82 @@ export function WhatsApp() {
                     }
                 </div >
             </div >
+
+            {showNewConversation && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+                    <div className="bg-[#0A0A0A] border border-white/10 rounded-2xl p-6 w-full max-w-md mx-4 shadow-2xl">
+                        <div className="flex items-center justify-between mb-6">
+                            <h3 className="text-white font-semibold text-lg">Nova Conversa</h3>
+                            <button
+                                onClick={() => { setShowNewConversation(false); setNewConvError(null); }}
+                                className="text-gray-500 hover:text-gray-300 transition-colors"
+                            >
+                                <X size={20} />
+                            </button>
+                        </div>
+
+                        <div className="space-y-4">
+                            <div>
+                                <label className="text-xs text-gray-500 uppercase font-medium mb-1.5 block">Instância</label>
+                                {connectedInstances.length === 0 ? (
+                                    <p className="text-sm text-red-400">Nenhuma instância conectada</p>
+                                ) : (
+                                    <select
+                                        value={newConvInstance}
+                                        onChange={(e) => setNewConvInstance(e.target.value)}
+                                        className="w-full bg-[#111] border border-white/10 text-white text-sm rounded-xl px-3 py-2.5 outline-none focus:border-green-500/50"
+                                    >
+                                        {connectedInstances.map(inst => (
+                                            <option key={inst.instance_name} value={inst.instance_name}>
+                                                {inst.instance_name}
+                                            </option>
+                                        ))}
+                                    </select>
+                                )}
+                            </div>
+
+                            <div>
+                                <label className="text-xs text-gray-500 uppercase font-medium mb-1.5 block">Número WhatsApp</label>
+                                <input
+                                    type="text"
+                                    placeholder="(11) 99999-9999"
+                                    value={newConvPhone}
+                                    onChange={(e) => setNewConvPhone(applyPhoneMask(e.target.value))}
+                                    className="w-full bg-[#111] border border-white/10 text-white text-sm rounded-xl px-3 py-2.5 outline-none focus:border-green-500/50 placeholder:text-gray-600"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="text-xs text-gray-500 uppercase font-medium mb-1.5 block">Primeira mensagem</label>
+                                <textarea
+                                    placeholder="Digite a mensagem..."
+                                    value={newConvText}
+                                    onChange={(e) => setNewConvText(e.target.value)}
+                                    rows={3}
+                                    className="w-full bg-[#111] border border-white/10 text-white text-sm rounded-xl px-3 py-2.5 outline-none focus:border-green-500/50 placeholder:text-gray-600 resize-none"
+                                />
+                            </div>
+
+                            {newConvError && (
+                                <p className="text-sm text-red-400">{newConvError}</p>
+                            )}
+
+                            <button
+                                onClick={handleStartConversation}
+                                disabled={newConvPhone.replace(/\D/g, '').length < 10 || !newConvText.trim() || !newConvInstance || isStartingConversation || connectedInstances.length === 0}
+                                className="w-full py-3 bg-green-600 hover:bg-green-500 disabled:opacity-40 disabled:cursor-not-allowed text-white font-medium rounded-xl transition-colors flex items-center justify-center gap-2"
+                            >
+                                {isStartingConversation ? (
+                                    <div className="w-4 h-4 border-2 border-white/60 border-t-transparent rounded-full animate-spin" />
+                                ) : (
+                                    <Send size={16} />
+                                )}
+                                {isStartingConversation ? 'Enviando...' : 'Iniciar conversa'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div >
     );
 }

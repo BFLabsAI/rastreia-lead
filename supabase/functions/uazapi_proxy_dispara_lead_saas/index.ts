@@ -6,23 +6,55 @@ const corsHeaders = {
     'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Brazilian mobile numbers: 55 + DDD(2) + [9] + 8digits
+// Inbound from WhatsApp comes without the nono dígito (12-digit).
+// We normalize to the 13-digit form for sending and generate all variants for DB lookups.
+
+const stripPhone = (phone: string): string =>
+    phone.replace(/@s\.whatsapp\.net$/, '').replace(/@c\.us$/, '').replace(/\D/g, '');
+
+const toApiPhone = (phone: string): string => {
+    const d = stripPhone(phone);
+    // 12-digit BR mobile → add nono dígito so UazAPI routes correctly
+    if (d.length === 12 && d.startsWith('55')) {
+        return '55' + d.slice(2, 4) + '9' + d.slice(4);
+    }
+    return d;
+};
+
+const phoneOrFilter = (phone: string): string => {
+    const d = stripPhone(phone);
+    let d12 = d;
+    let d13 = d;
+    if (d.length === 13 && d.startsWith('55')) {
+        const afterDdd = d.slice(4);
+        if (afterDdd.startsWith('9') && afterDdd.length === 9) {
+            d12 = '55' + d.slice(2, 4) + afterDdd.slice(1);
+        }
+    } else if (d.length === 12 && d.startsWith('55')) {
+        d13 = '55' + d.slice(2, 4) + '9' + d.slice(4);
+    }
+    const variants = [...new Set([d12, d13, d12 + '@s.whatsapp.net', d13 + '@s.whatsapp.net'])];
+    return variants.map(v => `telefone_lead.eq.${v}`).join(',');
+};
+
 serve(async (req) => {
     if (req.method === 'OPTIONS') {
         return new Response('ok', { headers: corsHeaders });
     }
 
     try {
-        const UAZAPI_BASE_URL = Deno.env.get('UAZAPI_BASE_URL');
-        const UAZAPI_TOKEN = Deno.env.get('UAZAPI_TOKEN');
+        const UAZAPI_BASE_URL = Deno.env.get('UAZAPI_BASE_URL') || 'https://bflabs.uazapi.com';
+        const UAZAPI_TOKEN = Deno.env.get('UAZAPI_ADMIN_TOKEN');
         const SUPABASE_URL = Deno.env.get('SUPABASE_URL');
         const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 
-        if (!UAZAPI_BASE_URL || !UAZAPI_TOKEN || !SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
-            throw new Error("Missing environment variables");
+        if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
+            throw new Error("Missing Supabase environment variables");
         }
 
         const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
-        const { action, instanceId, clientId, instanceName, instanceToken } = await req.json();
+        const { action, instanceId, clientId, instanceName, instanceToken, phoneNumber, text, leadId, userId } = await req.json();
 
         // -------------------------
         // ACTION: CREATE INSTANCE
@@ -38,17 +70,16 @@ serve(async (req) => {
                     'admintoken': UAZAPI_TOKEN
                 },
                 body: JSON.stringify({
-                    name: instanceId, // The technical name
+                    name: instanceId,
                     systemName: 'dashboard-clientes-bf',
-                    // UazAPI might not use this field but we pass it just in case or for tagging
                     adminField01: clientId
                 })
             });
             const data = await response.json();
+            console.log(`[create_instance] UazAPI response (${response.status}):`, JSON.stringify(data));
 
             if (!data.token) {
-                // Check if it already exists or error
-                throw new Error(data.message || "Failed to init instance at UazAPI");
+                throw new Error(data.message || data.error || `UazAPI error (${response.status}): ${JSON.stringify(data)}`);
             }
 
             // 2. Insert into DB
@@ -224,125 +255,15 @@ serve(async (req) => {
                 .single();
 
             if (instance) {
-                // Try to delete from UazAPI
-                // User cURL: DELETE /instance with header 'token: instanceToken'
                 console.log(`Deleting instance ${instanceName} from UazAPI...`);
-
-                const delResponse = await fetch(`${UAZAPI_BASE_URL}/instance/delete/${instanceName}`, {
-                    method: 'DELETE',
-                    headers: {
-                        'admintoken': UAZAPI_TOKEN
-                    }
-                });
-
-                // Wait, user explicitly showed:
-                // url https://bflabs.uazapi.com/instance
-                // header token: ...
-
-                // Let's try THAT first as it is what user provided.
-                const delResponseUser = await fetch(`${UAZAPI_BASE_URL}/instance/delete/${instanceName}`, {
-                    method: 'DELETE',
-                    headers: {
-                        'apikey': UAZAPI_TOKEN
-                    }
-                });
-
-                // Correction based on user input:
-                // curl --request DELETE --url https://bflabs.uazapi.com/instance --header 'token: ...'
-
-                const realDelResponse = await fetch(`${UAZAPI_BASE_URL}/instance/delete/${instanceName}`, {
-                    // Evolution API v1 often uses /instance/delete/:name with global token
-                    // But user provided a v2-like or specific route using instance token?
-                    // Or maybe it is Evolution v2: DELETE /instance/delete/:instance_id
-                    // providing the instance token might be the key.
-
-                    // Let's follow the user's cURL EXACTLY first?
-                    // DELETE https://bflabs.uazapi.com/instance
-                    // headers: token: <instance_token>
+                const delResponse = await fetch(`${UAZAPI_BASE_URL}/instance`, {
                     method: 'DELETE',
                     headers: {
                         'token': instance.token,
                         'Content-Type': 'application/json'
                     }
                 });
-
-                // Actually, duplicate fetch is bad. Let's use the one the user gave.
-                const response = await fetch(`${UAZAPI_BASE_URL}/instance/delete/${instanceName}`, {
-                    method: 'DELETE',
-                    headers: {
-                        'apikey': UAZAPI_TOKEN
-                    }
-                });
-                // WAIT. If I use user's cURL:
-                // DELETE /instance
-                // Headers: token: instance.token
-
-                await fetch(`${UAZAPI_BASE_URL}/instance/delete/${instanceName}`, {
-                    method: 'DELETE',
-                    headers: {
-                        'apikey': UAZAPI_TOKEN
-                    }
-                });
-
-                // I will comment out the confusion and implement exactly what user asked
-                // User said: DELETE /instance with token header.
-
-                const uazDel = await fetch(`${UAZAPI_BASE_URL}/instance/delete/${instanceName}`, {
-                    method: 'DELETE',
-                    headers: {
-                        'apikey': UAZAPI_TOKEN
-                    }
-                });
-
-                // RE-READING USER REQUEST:
-                // curl --request DELETE --url https://bflabs.uazapi.com/instance --header 'token: ...'
-                // This deletes the instance associated with the token? 
-
-                await fetch(`${UAZAPI_BASE_URL}/instance/delete/${instanceName}`, {
-                    method: 'DELETE',
-                    headers: {
-                        'apikey': UAZAPI_TOKEN
-                    }
-                });
-
-                // ACTUALLY, Evolution API usually allows deleting by name with global Key.
-                // BUT the user insists on the token method.
-                // Evolution API v2: DELETE /instance/delete/:instance
-
-                // Let's try both? Or prefer the user one.
-                // The User's URL is `/instance`. All documentation I know uses `/instance/delete/:id`.
-                // BUT maybe the user's API is different.
-
-                // I'll implement exactly what provided:
-                await fetch(`${UAZAPI_BASE_URL}/instance/delete/${instanceName}`, {
-                    method: 'DELETE',
-                    headers: {
-                        'apikey': UAZAPI_TOKEN
-                    }
-                });
-
-                // If I look at the previous 'disconnect', I used /logout.
-
-                // Let's use exactly what user sent:
-                await fetch(`${UAZAPI_BASE_URL}/instance/delete/${instanceName}`, {
-                    method: 'DELETE',
-                    headers: {
-                        'apikey': UAZAPI_TOKEN
-                    }
-                });
-
-                // No, I must use what is in the prompt.
-                // Prompt: url https://bflabs.uazapi.com/instance
-                // Header: token: ...
-
-                await fetch(`${UAZAPI_BASE_URL}/instance`, { // CAREFUL: Is it /instance or /instance/:id?
-                    // User said /instance.
-                    method: 'DELETE',
-                    headers: {
-                        'token': instance.token,
-                        'Content-Type': 'application/json'
-                    }
-                });
+                console.log(`[delete_instance] UazAPI response (${delResponse.status})`);
             }
 
             // Delete from DB
@@ -596,6 +517,176 @@ serve(async (req) => {
                 }
             }), {
                 headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            });
+        }
+
+        // -------------------------
+        // ACTION: SEND TEXT MESSAGE
+        // -------------------------
+        if (action === 'send_text_message') {
+            if (!instanceName || !phoneNumber || !text || !clientId || !leadId) {
+                throw new Error("Missing required fields: instanceName, phoneNumber, text, clientId, leadId");
+            }
+
+            // 1. Buscar instância
+            const { data: instance, error: instanceError } = await supabase
+                .from('instances_clientes_bf_labs')
+                .select('id, token, status')
+                .eq('instance_name', instanceName)
+                .single();
+
+            if (instanceError || !instance) throw new Error("Instance not found");
+
+            // 2. Verificar se está conectada
+            if (instance.status !== 'connected') {
+                return new Response(JSON.stringify({ error: 'Instância não está conectada' }), {
+                    status: 400,
+                    headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+                });
+            }
+
+            // 3. Normalizar telefone (sempre 13 dígitos para UazAPI)
+            const cleanPhone = toApiPhone(phoneNumber);
+
+            // 4. Chamar UazAPI
+            const uazResponse = await fetch(`${UAZAPI_BASE_URL}/send/text`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'token': instance.token
+                },
+                body: JSON.stringify({ number: cleanPhone, text })
+            });
+            const uazData = await uazResponse.json();
+
+            if (!uazResponse.ok) {
+                return new Response(JSON.stringify({ error: uazData.message || uazData.error || 'Erro ao enviar mensagem na UazAPI' }), {
+                    status: 400,
+                    headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+                });
+            }
+
+            // 5. Salvar no banco
+            const uazapiMessageId = uazData.id || uazData.messageid || null;
+            const { data: savedMessage, error: dbError } = await supabase
+                .from('messages_relatorios_clientes')
+                .insert({
+                    client_id: clientId,
+                    instance_id: instance.id,
+                    lead_id: leadId,
+                    uazapi_message_id: uazapiMessageId,
+                    direction: 'outbound',
+                    message_type: 'text',
+                    content: text,
+                    sender_name: null,
+                    user_id: userId || null,
+                    sent_at: new Date().toISOString()
+                })
+                .select()
+                .single();
+
+            if (dbError) throw dbError;
+
+            return new Response(JSON.stringify({ success: true, message: savedMessage }), {
+                headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+            });
+        }
+
+        // -------------------------
+        // ACTION: START CONVERSATION
+        // -------------------------
+        if (action === 'start_conversation') {
+            if (!phoneNumber || !text || !instanceName || !clientId) {
+                throw new Error("Missing required fields");
+            }
+
+            // 1. Normalizar telefone
+            const apiPhone = toApiPhone(phoneNumber); // 13-digit para UazAPI
+            const orFilter = phoneOrFilter(phoneNumber); // todas as variantes para lookup
+
+            // 2. Buscar instância
+            const { data: instance, error: instanceError } = await supabase
+                .from('instances_clientes_bf_labs')
+                .select('id, token, status')
+                .eq('instance_name', instanceName)
+                .single();
+
+            if (instanceError || !instance) throw new Error("Instance not found");
+            if (instance.status !== 'connected') {
+                return new Response(JSON.stringify({ error: 'Instância não está conectada' }), {
+                    status: 400,
+                    headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+                });
+            }
+
+            // 3. Buscar lead existente — cobre 12-digit, 13-digit, com/sem @s.whatsapp.net
+            const { data: existingLeads } = await supabase
+                .from('relatorio_leads_cliente')
+                .select('*')
+                .eq('cliente_id', clientId)
+                .or(orFilter);
+
+            let lead = existingLeads && existingLeads.length > 0 ? existingLeads[0] : null;
+
+            // 4. Se não existe, criar lead novo no formato canônico (12-digit + @s.whatsapp.net)
+            if (!lead) {
+                const canonicalPhone = stripPhone(apiPhone).length === 13
+                    ? '55' + stripPhone(apiPhone).slice(2, 4) + stripPhone(apiPhone).slice(5) + '@s.whatsapp.net'
+                    : stripPhone(apiPhone) + '@s.whatsapp.net';
+
+                const { data: newLead, error: leadError } = await supabase
+                    .from('relatorio_leads_cliente')
+                    .insert({
+                        cliente_id: clientId,
+                        telefone_lead: canonicalPhone,
+                        instance_name: instanceName,
+                        lead_name: apiPhone,
+                    })
+                    .select()
+                    .single();
+
+                if (leadError) throw leadError;
+                lead = newLead;
+            }
+
+            // 5. Enviar mensagem via UazAPI (sempre 13-digit)
+            const uazResponse = await fetch(`${UAZAPI_BASE_URL}/send/text`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'token': instance.token
+                },
+                body: JSON.stringify({ number: apiPhone, text })
+            });
+            const uazData = await uazResponse.json();
+
+            if (!uazResponse.ok) {
+                return new Response(JSON.stringify({ error: uazData.message || uazData.error || 'Erro ao enviar mensagem' }), {
+                    status: 400,
+                    headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+                });
+            }
+
+            // 6. Salvar mensagem
+            const uazapiMessageId = uazData.id || uazData.messageid || null;
+            const { error: msgError } = await supabase
+                .from('messages_relatorios_clientes')
+                .insert({
+                    client_id: clientId,
+                    instance_id: instance.id,
+                    lead_id: lead.id,
+                    uazapi_message_id: uazapiMessageId,
+                    direction: 'outbound',
+                    message_type: 'text',
+                    content: text,
+                    sent_at: new Date().toISOString()
+                });
+
+            if (msgError) throw msgError;
+
+            // 7. Retornar lead completo
+            return new Response(JSON.stringify({ success: true, lead }), {
+                headers: { ...corsHeaders, 'Content-Type': 'application/json' }
             });
         }
 

@@ -132,5 +132,47 @@ export const uazapiClient = {
             throw new Error(err.error || 'Failed to import instance');
         }
         return response.json();
+    },
+
+    // Start a new conversation (creates lead if needed)
+    startConversation: async (phoneNumber: string, text: string, instanceName: string, clientId: string) => {
+        const response = await fetch(EDGE_FUNCTION_URL, {
+            method: 'POST',
+            headers: await getAuthHeaders(),
+            body: JSON.stringify({
+                action: 'start_conversation',
+                phoneNumber,
+                text,
+                instanceName,
+                clientId
+            })
+        });
+        if (!response.ok) {
+            const err = await response.json();
+            throw new Error(err.error || 'Falha ao iniciar conversa');
+        }
+        return response.json();
+    },
+
+    // Send Text Message
+    sendTextMessage: async (instanceName: string, phoneNumber: string, text: string, clientId: string, leadId: string, userId?: string) => {
+        const response = await fetch(EDGE_FUNCTION_URL, {
+            method: 'POST',
+            headers: await getAuthHeaders(),
+            body: JSON.stringify({
+                action: 'send_text_message',
+                instanceName,
+                phoneNumber,
+                text,
+                clientId,
+                leadId,
+                userId
+            })
+        });
+        if (!response.ok) {
+            const err = await response.json();
+            throw new Error(err.error || 'Falha ao enviar mensagem');
+        }
+        return response.json();
     }
 };
